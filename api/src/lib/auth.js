@@ -137,9 +137,13 @@ async function getValidationContext() {
 }
 
 function getBearerToken(request) {
-  const header = request.headers.get('authorization') || '';
+  const header = request.headers.get('x-labornaplo-authorization') || '';
   const match = /^Bearer\s+([^\s]+)$/i.exec(header);
-  if (!match) throw new UnauthorizedError('MISSING_BEARER_TOKEN');
+
+  if (!match) {
+    throw new UnauthorizedError('MISSING_BEARER_TOKEN');
+  }
+
   return match[1];
 }
 
