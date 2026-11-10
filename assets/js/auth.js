@@ -138,7 +138,21 @@ async function startAuthentication() {
         }
         throw error;
       }
+const parts = tokenResponse.accessToken.split('.');
+const encodedHeader = parts[0]
+  .replace(/-/g, '+')
+  .replace(/_/g, '/');
+const paddedHeader = encodedHeader.padEnd(
+  Math.ceil(encodedHeader.length / 4) * 4,
+  '='
+);
+const tokenHeader = JSON.parse(atob(paddedHeader));
 
+console.log('LaborNapló token fejléc:', {
+  alg: tokenHeader.alg,
+  kid: tokenHeader.kid || null,
+  typ: tokenHeader.typ || null
+});
       const response = await fetch(AUTH_CONFIG.protectedApiEndpoint || '/api/me', {
         method: 'GET',
         headers: {
