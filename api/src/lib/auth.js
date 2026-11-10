@@ -3,9 +3,11 @@
 const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 class UnauthorizedError extends Error {
-  constructor() {
+  constructor(reason = 'TOKEN_REJECTED') {
     super('Unauthorized');
     this.code = 'UNAUTHORIZED';
+    // A short, non-sensitive diagnostic code. Never include token contents or claim values.
+    this.reason = reason;
   }
 }
 
@@ -133,7 +135,7 @@ async function getValidationContext() {
 function getBearerToken(request) {
   const header = request.headers.get('authorization') || '';
   const match = /^Bearer\s+([^\s]+)$/i.exec(header);
-  if (!match) throw new UnauthorizedError();
+  if (!match) throw new UnauthorizedError('MISSING_BEARER_TOKEN');
   return match[1];
 }
 
@@ -150,9 +152,19 @@ async function authenticateRequest(request) {
       audience: context.apiClientId,
       clockTolerance: 5
     }));
-  } catch {
-    // Do not return token parsing or cryptographic details to the caller.
-    throw new UnauthorizedError();
+  } catch (error) {
+    // Only expose a coarse diagnostic category when AUTH_DIAGNOSTICS is enabled.
+    // Do not log or return the bearer token, raw claims, or personal identifiers.
+    const code = String(error?.code || error?.name || 'UNKNOWN');
+    let reason = 'JWT_VERIFICATION_FAILED';
+    if (code.includes('JWKS_NO_MATCHING_KEY')) reason = 'SIGNING_KEY_NOT_FOUND';
+    else if (code.includes('SIGNATURE_VERIFICATION_FAILED')) reason = 'SIGNATURE_INVALID';
+    else if (code.includes('JWT_EXPIRED')) reason = 'TOKEN_EXPIRED';
+    else if (code.includes('JWT_CLAIM_VALIDATION_FAILED')) {
+      const claim = String(error?.claim || '').toLowerCase();
+      reason = claim === 'iss' ? 'ISSUER_MISMATCH' : claim === 'aud' ? 'AUDIENCE_MISMATCH' : 'JWT_CLAIM_INVALID';
+    }
+    throw new UnauthorizedError(reason);
   }
 
   const tenantId = String(payload.tid || '').toLowerCase();
@@ -160,10 +172,10 @@ async function authenticateRequest(request) {
   const scopes = typeof payload.scp === 'string' ? payload.scp.split(/\s+/) : [];
   const userId = typeof payload.oid === 'string' ? payload.oid : payload.sub;
 
-  if (tenantId !== context.tenantId) throw new UnauthorizedError();
-  if (callingClientId !== context.spaClientId) throw new UnauthorizedError();
-  if (!scopes.includes(context.requiredScope)) throw new UnauthorizedError();
-  if (typeof userId !== 'string' || userId.length === 0) throw new UnauthorizedError();
+  if (tenantId !== context.tenantId) throw new UnauthorizedError('TENANT_ID_MISMATCH');
+  if (callingClientId !== context.spaClientId) throw new UnauthorizedError('CALLING_CLIENT_MISMATCH');
+  if (!scopes.includes(context.requiredScope)) throw new UnauthorizedError('REQUIRED_SCOPE_MISSING');
+  if (typeof userId !== 'string' || userId.length === 0) throw new UnauthorizedError('USER_IDENTIFIER_MISSING');
 
   return {
     userId,

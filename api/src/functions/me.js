@@ -32,7 +32,11 @@ app.http('me', {
             'Cache-Control': 'no-store',
             'WWW-Authenticate': 'Bearer'
           },
-          jsonBody: { error: 'unauthorized', message: 'Érvényes bejelentkezés szükséges.' }
+          jsonBody: {
+            error: 'unauthorized',
+            message: 'Érvényes bejelentkezés szükséges.',
+            ...(process.env.AUTH_DIAGNOSTICS === 'true' ? { diagnosticCode: error.reason || 'TOKEN_REJECTED' } : {})
+          }
         };
       }
 

@@ -139,29 +139,6 @@ async function startAuthentication() {
         throw error;
       }
 
-      // Temporary, privacy-safe diagnostics: log only token validation claims,
-      // never the bearer token itself or personal identifiers (sub/oid/email).
-      try {
-        const tokenPart = tokenResponse.accessToken.split('.')[1];
-        const normalized = tokenPart.replace(/-/g, '+').replace(/_/g, '/');
-        const decodedBytes = Uint8Array.from(
-          atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')),
-          (character) => character.charCodeAt(0)
-        );
-        const tokenClaims = JSON.parse(new TextDecoder().decode(decodedBytes));
-        console.info('[LaborNapló API token diagnostics]', {
-          aud: tokenClaims.aud ?? null,
-          iss: tokenClaims.iss ?? null,
-          tid: tokenClaims.tid ?? null,
-          azp: tokenClaims.azp ?? null,
-          appid: tokenClaims.appid ?? null,
-          scp: tokenClaims.scp ?? null,
-          ver: tokenClaims.ver ?? null
-        });
-      } catch (diagnosticError) {
-        console.warn('[LaborNapló API token diagnostics] Could not decode token claims locally.');
-      }
-
       const response = await fetch(AUTH_CONFIG.protectedApiEndpoint || '/api/me', {
         method: 'GET',
         headers: {
@@ -173,7 +150,13 @@ async function startAuthentication() {
       });
 
       if (response.status === 401) {
-        throw new Error('A Microsoft-belépés sikerült, de az API nem fogadta el a hozzáférési tokent. Ellenőrizd az API-jogosultságot és az Azure környezeti beállításait.');
+        let rejection = null;
+        try { rejection = await response.json(); } catch { /* keep generic message */ }
+        const code = typeof rejection?.diagnosticCode === 'string' ? rejection.diagnosticCode : null;
+        if (code) console.info('[LaborNapló API diagnostic]', code);
+        throw new Error(code
+          ? `Az API elutasította a tokent. Diagnosztikai kód: ${code}`
+          : 'A Microsoft-belépés sikerült, de az API nem fogadta el a hozzáférési tokent. Ellenőrizd az API-jogosultságot és az Azure környezeti beállításokat.');
       }
       if (!response.ok) {
         throw new Error('A biztonságos API-ellenőrzés jelenleg nem érhető el. Ellenőrizd az Azure API környezeti beállításait és a GitHub Actions telepítést.');
