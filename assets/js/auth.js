@@ -118,12 +118,17 @@ async function startAuthentication() {
     }
 
     async function verifyApiAccess(currentAccount) {
+      console.log('[LaborNapló] verifyApiAccess elindult');
       let tokenResponse;
       try {
         tokenResponse = await msalInstance.acquireTokenSilent({
           scopes: [AUTH_CONFIG.apiScope],
           account: currentAccount
         });
+        console.log('[LaborNapló] Token megszerzése sikerült:', {
+  hasAccessToken: Boolean(tokenResponse?.accessToken),
+  expiresOn: tokenResponse?.expiresOn
+});
       } catch (error) {
         if (error instanceof InteractionRequiredAuthError ||
             error?.errorCode === 'interaction_required' ||
