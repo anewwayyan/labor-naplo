@@ -3,11 +3,15 @@
 const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 class UnauthorizedError extends Error {
-  constructor(reason = 'TOKEN_REJECTED') {
+  constructor(reason = 'TOKEN_REJECTED', details = {}) {
     super('Unauthorized');
     this.code = 'UNAUTHORIZED';
-    // A short, non-sensitive diagnostic code. Never include token contents or claim values.
+    // Only allowlisted, non-sensitive diagnostics. Never include the bearer token or claim values.
     this.reason = reason;
+    this.joseCode = details.joseCode || null;
+    this.joseName = details.joseName || null;
+    this.algorithm = details.algorithm || null;
+    this.keyIdPresent = details.keyIdPresent === true;
   }
 }
 
@@ -153,18 +157,41 @@ async function authenticateRequest(request) {
       clockTolerance: 5
     }));
   } catch (error) {
-    // Only expose a coarse diagnostic category when AUTH_DIAGNOSTICS is enabled.
-    // Do not log or return the bearer token, raw claims, or personal identifiers.
-    const code = String(error?.code || error?.name || 'UNKNOWN');
+    // Expose only standardized JOSE error identifiers and non-secret header metadata
+    // while diagnostics are enabled. Never log or return the bearer token or claim values.
+    const rawCode = String(error?.code || 'NO_ERROR_CODE');
+    const allowedCodes = new Set([
+      'ERR_JOSE_ALG_NOT_ALLOWED', 'ERR_JOSE_GENERIC', 'ERR_JOSE_NOT_SUPPORTED',
+      'ERR_JWKS_INVALID', 'ERR_JWKS_MULTIPLE_MATCHING_KEYS', 'ERR_JWKS_NO_MATCHING_KEY',
+      'ERR_JWKS_TIMEOUT', 'ERR_JWS_INVALID', 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED',
+      'ERR_JWT_CLAIM_VALIDATION_FAILED', 'ERR_JWT_EXPIRED', 'ERR_JWT_INVALID'
+    ]);
+    const joseCode = allowedCodes.has(rawCode) ? rawCode : 'UNCLASSIFIED';
+    const joseName = /^[A-Za-z0-9]+$/.test(String(error?.name || '')) ? String(error.name) : 'UnknownError';
+    let algorithm = null;
+    let keyIdPresent = false;
+    try {
+      const { decodeProtectedHeader } = await import('jose');
+      const header = decodeProtectedHeader(token);
+      algorithm = typeof header.alg === 'string' && /^[A-Za-z0-9-]+$/.test(header.alg) ? header.alg : null;
+      keyIdPresent = typeof header.kid === 'string' && header.kid.length > 0;
+    } catch { /* malformed token header; do not expose token data */ }
+
     let reason = 'JWT_VERIFICATION_FAILED';
-    if (code.includes('JWKS_NO_MATCHING_KEY')) reason = 'SIGNING_KEY_NOT_FOUND';
-    else if (code.includes('SIGNATURE_VERIFICATION_FAILED')) reason = 'SIGNATURE_INVALID';
-    else if (code.includes('JWT_EXPIRED')) reason = 'TOKEN_EXPIRED';
-    else if (code.includes('JWT_CLAIM_VALIDATION_FAILED')) {
+    if (rawCode === 'ERR_JWKS_NO_MATCHING_KEY') reason = 'SIGNING_KEY_NOT_FOUND';
+    else if (rawCode === 'ERR_JWKS_TIMEOUT') reason = 'SIGNING_KEY_FETCH_TIMEOUT';
+    else if (rawCode === 'ERR_JWKS_INVALID') reason = 'SIGNING_KEY_SET_INVALID';
+    else if (rawCode === 'ERR_JWKS_MULTIPLE_MATCHING_KEYS') reason = 'SIGNING_KEY_AMBIGUOUS';
+    else if (rawCode === 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED') reason = 'SIGNATURE_INVALID';
+    else if (rawCode === 'ERR_JOSE_ALG_NOT_ALLOWED') reason = 'SIGNING_ALGORITHM_NOT_ALLOWED';
+    else if (rawCode === 'ERR_JWS_INVALID') reason = 'JWT_SIGNATURE_FORMAT_INVALID';
+    else if (rawCode === 'ERR_JWT_INVALID') reason = 'JWT_FORMAT_INVALID';
+    else if (rawCode === 'ERR_JWT_EXPIRED') reason = 'TOKEN_EXPIRED';
+    else if (rawCode === 'ERR_JWT_CLAIM_VALIDATION_FAILED') {
       const claim = String(error?.claim || '').toLowerCase();
       reason = claim === 'iss' ? 'ISSUER_MISMATCH' : claim === 'aud' ? 'AUDIENCE_MISMATCH' : 'JWT_CLAIM_INVALID';
     }
-    throw new UnauthorizedError(reason);
+    throw new UnauthorizedError(reason, { joseCode, joseName, algorithm, keyIdPresent });
   }
 
   const tenantId = String(payload.tid || '').toLowerCase();

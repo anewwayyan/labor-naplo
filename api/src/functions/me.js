@@ -35,7 +35,13 @@ app.http('me', {
           jsonBody: {
             error: 'unauthorized',
             message: 'Érvényes bejelentkezés szükséges.',
-            ...(process.env.AUTH_DIAGNOSTICS === 'true' ? { diagnosticCode: error.reason || 'TOKEN_REJECTED' } : {})
+            ...(process.env.AUTH_DIAGNOSTICS === 'true' ? {
+              diagnosticCode: error.reason || 'TOKEN_REJECTED',
+              joseCode: error.joseCode || null,
+              joseName: error.joseName || null,
+              tokenAlgorithm: error.algorithm || null,
+              tokenHasKeyId: error.keyIdPresent === true
+            } : {})
           }
         };
       }

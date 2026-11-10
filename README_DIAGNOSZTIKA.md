@@ -1,22 +1,25 @@
-# LaborNapló – ideiglenes API-hitelesítési diagnosztika
+# LaborNapló – JWT diagnosztika (3. kör)
 
-Ez a csomag kizárólag a tokenelutasítás pontos okának azonosítására szolgál.
+Ez a csomag csak ideiglenes hibakeresésre szolgál. A bearer tokent, e-mail-címet, felhasználói azonosítót és teljes JWT-claim értékeket nem naplózza és nem küldi vissza.
 
-## Mit tartalmaz?
-- `api/src/lib/auth.js`: rövid, nem érzékeny elutasítási kódokat rendel a hitelesítési hibákhoz.
-- `api/src/functions/me.js`: csak az `AUTH_DIAGNOSTICS=true` környezeti változó mellett adja vissza a diagnosztikai kódot.
-- `assets/js/auth.js`: a visszaadott kódot megjeleníti a hibaüzenetben és a böngésző konzoljában.
+## GitHubon felülírandó fájlok
 
-## Telepítés
-A három fájlt a repository gyökeréhez viszonyított útvonalon kell felülírni. Más fájlhoz, különösen a workflow-hoz és az Entra-konfigurációhoz ne nyúlj.
+- `api/src/lib/auth.js`
+- `api/src/functions/me.js`
+- `assets/js/auth.js`
 
-Az Azure Static Web Apps Production környezetében ideiglenesen add hozzá:
+A mappaszerkezetet tartsd meg, és a repository gyökerébe másold a fájlokat. A többi fájlt ne módosítsd.
 
-`AUTH_DIAGNOSTICS=true`
+## Azure
 
-Deploy után jelentkezz be újra, majd próbáld meg a `/api/me` ellenőrzést. A felületen megjelenő diagnosztikai kódot küldd el. A bearer tokent, Authorization fejlécet vagy teljes JWT-t soha ne másold ki.
+Az Azure Static Web App Production környezeti változói között maradjon ideiglenesen:
 
-A diagnózis után töröljük az `AUTH_DIAGNOSTICS` változót, és a diagnosztikai kódot kiadó ideiglenes módosítást is eltávolítjuk.
+- `AUTH_DIAGNOSTICS=true`
 
-## Adatvédelem
-A diagnosztika nem naplóz bearer tokent, e-mail-címet, `oid` vagy `sub` claimet, és nem adja vissza a claimértékeket. Csak egy előre meghatározott hibakódot közöl.
+A csomag a következő diagnosztikai mezőket adja vissza: szabványos JOSE hibakód (allowlistből), hibatípus, token aláírási algoritmusa és annak jelzése, hogy van-e `kid` fejlécmező. A `kid` konkrét értékét nem teszi közzé.
+
+## Teszt
+
+Várd meg a zöld GitHub Actions deployt, frissítsd az oldalt, majd jelentkezz be újra. Másold el a felületen megjelenő teljes diagnosztikai kódot, például `SIGNING_KEY_FETCH_TIMEOUT (ERR_JWKS_TIMEOUT, JWKSTimeout, alg=RS256, kid=present)`.
+
+A hiba elhárítása után ezt az ideiglenes diagnosztikát el kell távolítani, és `AUTH_DIAGNOSTICS` értékét `false`-ra kell állítani vagy törölni kell.

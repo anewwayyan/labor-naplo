@@ -153,9 +153,21 @@ async function startAuthentication() {
         let rejection = null;
         try { rejection = await response.json(); } catch { /* keep generic message */ }
         const code = typeof rejection?.diagnosticCode === 'string' ? rejection.diagnosticCode : null;
-        if (code) console.info('[LaborNapló API diagnostic]', code);
+        const joseCode = typeof rejection?.joseCode === 'string' ? rejection.joseCode : null;
+        const joseName = typeof rejection?.joseName === 'string' ? rejection.joseName : null;
+        const algorithm = typeof rejection?.tokenAlgorithm === 'string' ? rejection.tokenAlgorithm : null;
+        const hasKeyId = rejection?.tokenHasKeyId === true;
+        if (code) console.info('[LaborNapló API diagnostic]', {
+          diagnosticCode: code,
+          joseCode,
+          joseName,
+          tokenAlgorithm: algorithm,
+          tokenHasKeyId: hasKeyId
+        });
+        const details = [joseCode, joseName, algorithm ? `alg=${algorithm}` : null, `kid=${hasKeyId ? 'present' : 'missing'}`]
+          .filter(Boolean).join(', ');
         throw new Error(code
-          ? `Az API elutasította a tokent. Diagnosztikai kód: ${code}`
+          ? `Az API elutasította a tokent. Diagnosztikai kód: ${code}${details ? ` (${details})` : ''}`
           : 'A Microsoft-belépés sikerült, de az API nem fogadta el a hozzáférési tokent. Ellenőrizd az API-jogosultságot és az Azure környezeti beállításokat.');
       }
       if (!response.ok) {
