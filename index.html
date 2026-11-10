@@ -6,12 +6,32 @@
   <meta name="theme-color" content="#f5f8f7" />
   <title>LaborNapló – személyes laboreredmények</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/auth.css" />
 </head>
 <body>
   <div class="app">
+    <section class="auth-screen" id="authScreen" aria-labelledby="authTitle">
+      <div class="auth-card">
+        <div class="auth-brand"><div class="brand-mark">＋</div><span>LaborNapló</span></div>
+        <div class="auth-icon" aria-hidden="true">✉</div>
+        <div class="eyebrow">Személyes laboreredmények</div>
+        <h1 id="authTitle">Belépés e-maillel</h1>
+        <p class="auth-description">Add meg az e-mail-címedet a Microsoft biztonságos bejelentkezési oldalán. Egy egyszer használatos kódot küldünk a postaládádba.</p>
+        <button type="button" class="primary-btn auth-login-btn" id="loginButton" hidden>Belépés e-maillel</button>
+        <div class="auth-setup-note" id="authSetupNote">
+          <strong>A bejelentkezés beállítása még nincs kész.</strong>
+          <span>Az Entra External ID bérlő és az alkalmazásazonosító beállítása után itt jelenik meg a belépés gomb.</span>
+        </div>
+        <div class="auth-error" id="authError" role="alert" hidden></div>
+        <p class="auth-footnote">Első belépéskor az e-mail-címed ellenőrzése után automatikusan létrejön a fiókod. Nem kell jelszót választanod vagy Microsoft-fiókot készítened.</p>
+        <div class="auth-security"><span aria-hidden="true">▣</span> A belépést a Microsoft Entra External ID kezeli.</div>
+      </div>
+    </section>
+
+    <div id="authenticatedApp" hidden>
     <header class="topbar">
       <div class="brand"><div class="brand-mark">＋</div><span>LaborNapló</span></div>
-      <div class="top-right"><span class="user-label">Személyes laboreredmények</span><div class="avatar">U</div></div>
+      <div class="top-right"><span class="user-label" id="authUserEmail">Bejelentkezve</span><button type="button" class="auth-logout-btn" id="logoutButton">Kilépés</button><div class="avatar" id="authAvatar">U</div></div>
     </header>
 
     <div class="layout">
@@ -94,9 +114,12 @@
       <button data-page="documents"><span class="nav-icon">▤</span><span>Leleteim</span></button>
       <button data-page="profile"><span class="nav-icon">♙</span><span>Profilom</span></button>
     </nav>
+    </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <script src="assets/js/auth-config.js"></script>
   <script src="assets/js/app.js" defer></script>
+  <script type="module" src="assets/js/auth.js"></script>
 </body>
 </html>
