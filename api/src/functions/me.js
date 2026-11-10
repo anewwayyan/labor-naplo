@@ -11,6 +11,11 @@ app.http('me', {
   authLevel: 'anonymous',
   route: 'me',
   handler: async (request, context) => {
+    context.log('[LaborNapló] Beérkező hitelesítési fejlécek:', {
+  authorization: Boolean(request.headers.get('authorization')),
+  swaAuthToken: Boolean(request.headers.get('x-ms-auth-token')),
+  clientPrincipal: Boolean(request.headers.get('x-ms-client-principal'))
+});
     try {
       const user = await authenticateRequest(request);
 
