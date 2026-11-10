@@ -161,7 +161,7 @@ console.log('LaborNapló token fejléc:', {
       const response = await fetch(AUTH_CONFIG.protectedApiEndpoint || '/api/me', {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${tokenResponse.accessToken}`,
+        'X-LaborNaplo-Authorization': `Bearer ${tokenResponse.accessToken}`,
           Accept: 'application/json'
         },
         cache: 'no-store',
