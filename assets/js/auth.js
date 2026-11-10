@@ -1,6 +1,7 @@
-/* LaborNapló sign-in: Microsoft Entra External ID + email one-time passcode.
- * Browser-delegated flow: Microsoft hosts the sign-in page and handles OTP verification.
- * No password or OTP is collected or stored by this application.
+/* LaborNapló sign-in and protected API check.
+ * Microsoft Entra External ID handles the email OTP sign-in.
+ * The SPA then requests an API-specific access token and calls /api/me.
+ * The API independently validates the token signature and claims.
  */
 
 const AUTH_CONFIG = window.LABORNAPLO_AUTH_CONFIG || {};
@@ -29,8 +30,9 @@ function isConfigured() {
   return Boolean(
     AUTH_CONFIG.clientId &&
     AUTH_CONFIG.tenantSubdomain &&
+    AUTH_CONFIG.apiScope &&
     !AUTH_CONFIG.clientId.includes('PASTE_') &&
-    !AUTH_CONFIG.tenantSubdomain.includes('PASTE_')
+    !AUTH_CONFIG.apiScope.includes('API_APP_CLIENT_ID')
   );
 }
 
@@ -64,9 +66,9 @@ async function startAuthentication() {
   loginButton.textContent = 'Bejelentkezés betöltése…';
 
   try {
-    // Version-pinned MSAL Browser LTS ESM package. For production hardening,
-    // bundle this dependency locally rather than loading it from a CDN.
-    const { PublicClientApplication, LogLevel } = await import(
+    // Version-pinned MSAL Browser package. For a later production hardening
+    // pass, bundle and self-host this dependency instead of loading a CDN.
+    const { PublicClientApplication, LogLevel, InteractionRequiredAuthError } = await import(
       'https://esm.sh/@azure/msal-browser@4.30.0?bundle'
     );
 
@@ -115,8 +117,55 @@ async function startAuthentication() {
       }
     }
 
+    async function verifyApiAccess(currentAccount) {
+      let tokenResponse;
+      try {
+        tokenResponse = await msalInstance.acquireTokenSilent({
+          scopes: [AUTH_CONFIG.apiScope],
+          account: currentAccount
+        });
+      } catch (error) {
+        if (error instanceof InteractionRequiredAuthError ||
+            error?.errorCode === 'interaction_required' ||
+            error?.errorCode === 'consent_required') {
+          // This redirect is only needed the first time the SPA obtains the
+          // API-specific permission, or after the Microsoft session expires.
+          await msalInstance.acquireTokenRedirect({
+            scopes: [AUTH_CONFIG.apiScope],
+            account: currentAccount
+          });
+          return;
+        }
+        throw error;
+      }
+
+      const response = await fetch(AUTH_CONFIG.protectedApiEndpoint || '/api/me', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${tokenResponse.accessToken}`,
+          Accept: 'application/json'
+        },
+        cache: 'no-store',
+        credentials: 'same-origin'
+      });
+
+      if (response.status === 401) {
+        throw new Error('A Microsoft-belépés sikerült, de az API nem fogadta el a hozzáférési tokent. Ellenőrizd az API-jogosultságot és az Azure környezeti beállításait.');
+      }
+      if (!response.ok) {
+        throw new Error('A biztonságos API-ellenőrzés jelenleg nem érhető el. Ellenőrizd az Azure API környezeti beállításait és a GitHub Actions telepítést.');
+      }
+
+      const result = await response.json();
+      if (result.authenticated !== true) {
+        throw new Error('Az API nem igazolta a bejelentkezést.');
+      }
+
+      showSignedIn(currentAccount);
+    }
+
     if (account) {
-      showSignedIn(account);
+      await verifyApiAccess(account);
     } else {
       showSignedOut();
     }
@@ -127,7 +176,7 @@ async function startAuthentication() {
       loginButton.textContent = 'Átirányítás…';
       try {
         await msalInstance.loginRedirect({
-          scopes: ['openid', 'profile', 'email'],
+          scopes: [AUTH_CONFIG.apiScope],
           prompt: 'login'
         });
       } catch (error) {
@@ -155,9 +204,11 @@ async function startAuthentication() {
       }
     });
   } catch (error) {
-    console.error('[LaborNapló auth] Initialization failed:', error);
-    showAuthError('A bejelentkezési szolgáltatás most nem érhető el, vagy a konfiguráció hibás. Frissítsd az oldalt, és ellenőrizd az Entra-beállításokat.');
-    loginButton.disabled = true;
+    console.error('[LaborNapló auth] Initialization or API verification failed:', error);
+    showSignedOut();
+    showAuthError(error?.message || 'A bejelentkezés vagy a biztonságos API-ellenőrzés nem sikerült. Frissítsd az oldalt, és ellenőrizd az Entra-beállításokat.');
+    loginButton.disabled = false;
+    loginButton.textContent = 'Belépés e-maillel';
   }
 }
 
