@@ -46,6 +46,9 @@ app.http('me', {
               joseName: error.joseName || null,
               tokenAlgorithm: error.algorithm || null,
               tokenHasKeyId: error.keyIdPresent === true
+              requestHasAuthorization: Boolean(request.headers.get('authorization')),
+requestHasSwaAuthToken: Boolean(request.headers.get('x-ms-auth-token')),
+requestHasClientPrincipal: Boolean(request.headers.get('x-ms-client-principal'))
             } : {})
           }
         };
