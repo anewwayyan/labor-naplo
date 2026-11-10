@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f5f8f7" />
+  <title>LaborNapló – személyes laboreredmények</title>
+  <style>
+    :root {
+      --bg: #f5f8f7;
+      --surface: #ffffff;
+      --surface-soft: #f0f6f4;
+      --text: #20312d;
+      --muted: #71807b;
+      --line: #e3ebe7;
+      --primary: #177b68;
+      --primary-dark: #116454;
+      --primary-soft: #e4f3ee;
+      --warning: #a96c16;
+      --warning-soft: #fff4df;
+      --shadow: 0 10px 30px rgba(30, 70, 58, .06);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; }
+    .topbar {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(24px, calc((100vw - 1180px) / 2));
+      background: rgba(255,255,255,.88);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(12px);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 760; letter-spacing: -.5px; font-size: 20px; }
+    .brand-mark {
+      width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center;
+      color: white; background: var(--primary); font-size: 21px; font-weight: 500;
+    }
+    .top-right { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary-dark); font-weight: 700; }
+    .layout { max-width: 1180px; margin: 0 auto; padding: 32px 24px 60px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 34px; }
+    .sidebar { padding-top: 8px; }
+    .nav-label { color: #9aa7a2; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; font-weight: 750; padding: 0 12px; margin: 12px 0 10px; }
+    .nav { display: grid; gap: 5px; }
+    .nav button {
+      display: flex; gap: 12px; align-items: center; width: 100%; border: 0; background: transparent;
+      color: #61716b; text-align: left; border-radius: 12px; padding: 11px 13px; font-size: 14px; font-weight: 600;
+    }
+    .nav button:hover { background: #edf4f1; color: var(--text); }
+    .nav button.active { background: var(--primary-soft); color: var(--primary-dark); }
+    .nav-icon { width: 20px; text-align: center; font-size: 17px; }
+    .side-note { margin: 34px 5px 0; background: #edf4f1; border: 1px solid #e3ece7; border-radius: 15px; padding: 14px; color: #63736d; font-size: 12px; }
+    .side-note strong { display: block; color: var(--text); font-size: 13px; margin-bottom: 5px; }
+    main { min-width: 0; }
+    .page { display: none; animation: appear .18s ease-out; }
+    .page.active { display: block; }
+    @keyframes appear { from { opacity: .55; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .eyebrow { font-size: 12px; font-weight: 700; color: var(--primary); letter-spacing: .3px; margin-bottom: 5px; }
+    h1 { margin: 0; font-size: clamp(27px, 4vw, 34px); letter-spacing: -1.1px; line-height: 1.2; }
+    .subheading { color: var(--muted); margin: 9px 0 0; font-size: 14px; }
+    .header-row { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 26px; }
+    .primary-btn, .secondary-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px; border-radius: 12px;
+      padding: 12px 17px; font-weight: 700; font-size: 13px; transition: .15s ease;
+    }
+    .primary-btn { color: white; background: var(--primary); border: 1px solid var(--primary); box-shadow: 0 4px 10px rgba(23,123,104,.14); }
+    .primary-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .secondary-btn { background: white; border: 1px solid var(--line); color: var(--text); }
+    .secondary-btn:hover { background: var(--surface-soft); }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .upload-card { padding: 22px; margin-bottom: 22px; }
+    .upload-card-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+    h2 { margin: 0; font-size: 17px; letter-spacing: -.3px; }
+    .small-muted { color: var(--muted); font-size: 12px; }
+    .dropzone {
+      border: 1.5px dashed #b9d4ca; border-radius: 15px; background: #f8fbfa; padding: 28px 18px;
+      text-align: center; transition: .15s ease;
+    }
+    .dropzone.dragover { border-color: var(--primary); background: var(--primary-soft); }
+    .upload-icon { width: 49px; height: 49px; margin: 0 auto 12px; border-radius: 15px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); font-size: 24px; }
+    .dropzone strong { display: block; font-size: 15px; margin-bottom: 5px; }
+    .dropzone p { color: var(--muted); font-size: 12px; margin: 0 0 15px; }
+    .file-hint { color: #98a49f; font-size: 11px; margin-top: 12px; }
+    .selected-file { display: none; margin-top: 14px; border: 1px solid var(--line); background: white; padding: 12px 14px; border-radius: 12px; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+    .selected-file.visible { display: flex; }
+    .file-info { min-width: 0; display: flex; gap: 10px; align-items: center; }
+    .file-badge { width: 35px; height: 35px; display: grid; place-items: center; background: #f0f3ff; border-radius: 10px; color: #596bb0; }
+    .file-name { font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+    .file-size { color: var(--muted); font-size: 11px; }
+    .remove-file { border: 0; background: transparent; color: var(--muted); font-size: 20px; padding: 4px 8px; }
+    .notice { display: flex; gap: 9px; align-items: flex-start; background: #f7f9f8; border: 1px solid var(--line); padding: 11px 13px; border-radius: 12px; color: #697872; font-size: 11px; margin-top: 15px; }
+    .notice b { color: #465750; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 27px 0 13px; }
+    .empty-card { padding: 25px; display: flex; align-items: center; gap: 16px; }
+    .empty-icon { width: 48px; height: 48px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 14px; background: #f1f5f3; color: #83938c; font-size: 22px; }
+    .empty-card strong { font-size: 13px; display: block; margin-bottom: 3px; }
+    .empty-card p { color: var(--muted); font-size: 12px; margin: 0; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+    .step { padding: 15px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.65); }
+    .step-num { color: var(--primary); font-size: 11px; font-weight: 800; margin-bottom: 8px; }
+    .step strong { display: block; font-size: 12px; margin-bottom: 4px; }
+    .step p { color: var(--muted); font-size: 11px; margin: 0; }
+    .content-card { padding: 22px; }
+    .empty-large { text-align: center; padding: 48px 20px; }
+    .empty-large .upload-icon { width: 58px; height: 58px; font-size: 27px; }
+    .empty-large h2 { font-size: 18px; margin-bottom: 7px; }
+    .empty-large p { max-width: 390px; margin: 0 auto 18px; color: var(--muted); font-size: 13px; }
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+    .profile-field { padding: 15px; border: 1px solid var(--line); border-radius: 13px; }
+    .profile-field span { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+    .profile-field strong { font-size: 13px; font-weight: 650; }
+    .prototype-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--warning-soft); color: #8b5c17; padding: 6px 9px; border-radius: 999px; font-size: 10px; font-weight: 750; }
+    .toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; background: #20312d; color: white; border-radius: 12px; padding: 11px 16px; font-size: 12px; box-shadow: var(--shadow); transition: .2s ease; z-index: 20; max-width: calc(100vw - 30px); }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .mobile-nav { display: none; }
+    @media (max-width: 760px) {
+      .topbar { height: 62px; padding: 0 17px; }
+      .top-right .user-label { display: none; }
+      .layout { display: block; padding: 25px 16px 95px; }
+      .sidebar { display: none; }
+      .header-row { align-items: flex-start; flex-direction: column; }
+      .header-row .primary-btn { width: 100%; }
+      .upload-card { padding: 16px; }
+      .steps { grid-template-columns: 1fr; }
+      .step { display: flex; align-items: flex-start; gap: 12px; }
+      .step-num { min-width: 24px; margin: 1px 0 0; }
+      .profile-grid { grid-template-columns: 1fr; }
+      .mobile-nav { position: fixed; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(255,255,255,.96); border-top: 1px solid var(--line); padding: 8px 5px calc(8px + env(safe-area-inset-bottom)); z-index: 10; backdrop-filter: blur(12px); }
+      .mobile-nav button { border: 0; background: transparent; color: #829089; display: grid; justify-items: center; gap: 3px; font-size: 10px; padding: 4px 2px; }
+      .mobile-nav button.active { color: var(--primary); font-weight: 750; }
+      .mobile-nav .nav-icon { font-size: 18px; }
+      .empty-card { align-items: flex-start; padding: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">＋</div><span>LaborNapló</span></div>
+      <div class="top-right"><span class="user-label">Személyes laboreredmények</span><div class="avatar">U</div></div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="nav-label">Menü</div>
+        <nav class="nav" aria-label="Fő navigáció">
+          <button class="active" data-page="home"><span class="nav-icon">⌂</span> Áttekintés</button>
+          <button data-page="results"><span class="nav-icon">⌁</span> Eredményeim</button>
+          <button data-page="documents"><span class="nav-icon">▤</span> Leleteim</button>
+          <button data-page="profile"><span class="nav-icon">♙</span> Saját adataim</button>
+        </nav>
+        <div class="side-note"><strong>Egyszerűen, érthetően.</strong> A laboreredményeid egy helyen, időrendben és könnyen áttekinthetően.</div>
+      </aside>
+
+      <main>
+        <section class="page active" id="page-home">
+          <div class="header-row">
+            <div><div class="eyebrow">Üdvözlünk a LaborNaplóban</div><h1>A laboreredményeid,<br>egy helyen.</h1><p class="subheading">Töltsd fel az első leletedet, a többit együtt követheted.</p></div>
+            <button class="primary-btn" id="topUpload">＋ Új lelet feltöltése</button>
+          </div>
+
+          <section class="card upload-card" id="upload-area">
+            <div class="upload-card-head"><div><h2>Új laborlelet</h2><div class="small-muted">Kezdd a dokumentum kiválasztásával.</div></div><span class="prototype-tag">PROTOTÍPUS</span></div>
+            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Laborlelet kiválasztása">
+              <div class="upload-icon">↑</div>
+              <strong>Húzd ide a laborleletedet</strong>
+              <p>Vagy válaszd ki az eszközödről.</p>
+              <button type="button" class="primary-btn" id="chooseFile">Fájl kiválasztása</button>
+              <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" hidden />
+              <div class="file-hint">PDF, JPG vagy PNG · legfeljebb 20 MB</div>
+            </div>
+            <div class="selected-file" id="selectedFile">
+              <div class="file-info"><div class="file-badge">▤</div><div><div class="file-name" id="fileName"></div><div class="file-size" id="fileSize"></div></div></div>
+              <button class="remove-file" id="removeFile" aria-label="Fájl eltávolítása">×</button>
+            </div>
+            <div class="notice"><span>ⓘ</span><div><b>Adatvédelem:</b> ez jelenleg egy felületi prototípus. A kiválasztott fájl nem kerül feltöltésre és nem hagyja el az eszközödet. A valódi, titkosított feltöltést az Azure-háttér bekötésekor készítjük el.</div></div>
+          </section>
+
+          <div class="section-head"><h2>Legutóbbi eredményeid</h2><span class="small-muted">Még nincs adat</span></div>
+          <div class="card empty-card"><div class="empty-icon">⌁</div><div><strong>Itt jelennek majd meg az eredményeid</strong><p>Az első lelet feldolgozása után itt láthatod a legfontosabb értékeket és azok változását.</p></div></div>
+
+          <div class="section-head"><h2>Így működik</h2></div>
+          <div class="steps">
+            <div class="step"><div class="step-num">01</div><div><strong>Feltöltöd a leletet</strong><p>PDF vagy fénykép – nem kell kézzel begépelned az adatokat.</p></div></div>
+            <div class="step"><div class="step-num">02</div><div><strong>Ellenőrzöd az adatokat</strong><p>Átnézheted, hogy a rendszer jól olvasta-e ki az értékeket.</p></div></div>
+            <div class="step"><div class="step-num">03</div><div><strong>Követed a változásokat</strong><p>Az új eredmények összevethetők lesznek a korábbi leleteiddel.</p></div></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-results">
+          <div class="header-row"><div><div class="eyebrow">Saját előzmények</div><h1>Eredményeim</h1><p class="subheading">A laborértékeid időbeli alakulása egy helyen.</p></div></div>
+          <div class="card content-card empty-large"><div class="upload-icon">⌁</div><h2>Még nincsenek eredményeid</h2><p>Amint feltöltesz és jóváhagysz egy laborleletet, itt jelennek meg a vizsgálati értékeid és az összehasonlítások.</p><button class="primary-btn" data-go="home">＋ Első lelet feltöltése</button></div>
+        </section>
+
+        <section class="page" id="page-documents">
+          <div class="header-row"><div><div class="eyebrow">Dokumentumtár</div><h1>Leleteim</h1><p class="subheading">Az általad feltöltött laborleletek listája.</p></div><button class="primary-btn" data-go="home">＋ Új lelet</button></div>
+          <div class="card content-card empty-large"><div class="upload-icon">▤</div><h2>Még nem töltöttél fel leletet</h2><p>A dokumentumaid itt lesznek elérhetők, dátum és laboratórium szerint rendezve.</p><button class="secondary-btn" data-go="home">Vissza az áttekintéshez</button></div>
+        </section>
+
+        <section class="page" id="page-profile">
+          <div class="header-row"><div><div class="eyebrow">Személyre szabás</div><h1>Saját adataim</h1><p class="subheading">Később itt adhatod meg az értelmezéshez fontos háttérinformációkat.</p></div></div>
+          <div class="card content-card">
+            <h2>Személyes profil</h2>
+            <p class="small-muted">A profil kitöltése nem lesz kötelező az alkalmazás használatához.</p>
+            <div class="profile-grid">
+              <div class="profile-field"><span>Alapadatok</span><strong>Életkor, nem, alapadatok</strong></div>
+              <div class="profile-field"><span>Egészségügyi előzmények</span><strong>Általad megadott állapotok</strong></div>
+              <div class="profile-field"><span>Gyógyszerek</span><strong>Rendszeresen szedett készítmények</strong></div>
+              <div class="profile-field"><span>Adatvédelem</span><strong>Adatok exportálása és törlése</strong></div>
+            </div>
+            <div class="notice"><span>ⓘ</span><div>Ezeket a funkciókat később építjük be. Egészségügyi adatot ebben a prototípusban még ne adj meg.</div></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Mobil navigáció">
+      <button class="active" data-page="home"><span class="nav-icon">⌂</span><span>Áttekintés</span></button>
+      <button data-page="results"><span class="nav-icon">⌁</span><span>Eredményeim</span></button>
+      <button data-page="documents"><span class="nav-icon">▤</span><span>Leleteim</span></button>
+      <button data-page="profile"><span class="nav-icon">♙</span><span>Profilom</span></button>
+    </nav>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const pages = ['home', 'results', 'documents', 'profile'];
+    const allNavButtons = document.querySelectorAll('[data-page]');
+    const toast = document.getElementById('toast');
+    let toastTimer;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function navigate(page) {
+      if (!pages.includes(page)) return;
+      pages.forEach(name => document.getElementById(`page-${name}`).classList.toggle('active', name === page));
+      allNavButtons.forEach(button => button.classList.toggle('active', button.dataset.page === page));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    allNavButtons.forEach(button => button.addEventListener('click', () => navigate(button.dataset.page)));
+    document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.go)));
+
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const selectedFile = document.getElementById('selectedFile');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+
+    function formatBytes(bytes) {
+      if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+      const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
+      const extensionOK = /\.(pdf|jpe?g|png)$/i.test(file.name);
+      if (!allowed.includes(file.type) && !extensionOK) {
+        showToast('Ezt a fájltípust nem támogatjuk. PDF, JPG vagy PNG fájlt válassz.');
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        showToast('A fájl túl nagy. A maximális méret 20 MB.');
+        return;
+      }
+      fileName.textContent = file.name;
+      fileSize.textContent = formatBytes(file.size);
+      selectedFile.classList.add('visible');
+      showToast('A fájl kiválasztva. Ez a prototípus még nem tölti fel.');
+    }
+
+    document.getElementById('chooseFile').addEventListener('click', event => {
+      event.stopPropagation();
+      fileInput.click();
+    });
+    document.getElementById('topUpload').addEventListener('click', () => {
+      navigate('home');
+      document.getElementById('upload-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      fileInput.click();
+    });
+    dropzone.addEventListener('click', event => {
+      if (event.target.closest('button')) return;
+      fileInput.click();
+    });
+    dropzone.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); fileInput.click(); }
+    });
+    fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+    document.getElementById('removeFile').addEventListener('click', () => {
+      fileInput.value = '';
+      selectedFile.classList.remove('visible');
+      showToast('A kiválasztott fájl eltávolítva.');
+    });
+
+    ['dragenter', 'dragover'].forEach(type => dropzone.addEventListener(type, event => {
+      event.preventDefault(); dropzone.classList.add('dragover');
+    }));
+    ['dragleave', 'drop'].forEach(type => dropzone.addEventListener(type, event => {
+      event.preventDefault(); dropzone.classList.remove('dragover');
+    }));
+    dropzone.addEventListener('drop', event => handleFile(event.dataTransfer.files[0]));
+  </script>
+</body>
+</html>
