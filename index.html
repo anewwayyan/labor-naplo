@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f5f8f7" />
+  <title>LaborNapló – személyes laboreredmények</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">＋</div><span>LaborNapló</span></div>
+      <div class="top-right"><span class="user-label">Személyes laboreredmények</span><div class="avatar">U</div></div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="nav-label">Menü</div>
+        <nav class="nav" aria-label="Fő navigáció">
+          <button class="active" data-page="home"><span class="nav-icon">⌂</span> Áttekintés</button>
+          <button data-page="results"><span class="nav-icon">⌁</span> Eredményeim</button>
+          <button data-page="documents"><span class="nav-icon">▤</span> Leleteim</button>
+          <button data-page="profile"><span class="nav-icon">♙</span> Saját adataim</button>
+        </nav>
+        <div class="side-note"><strong>Egyszerűen, érthetően.</strong> A laboreredményeid egy helyen, időrendben és könnyen áttekinthetően.</div>
+      </aside>
+
+      <main>
+        <section class="page active" id="page-home">
+          <div class="header-row">
+            <div><div class="eyebrow">Üdvözlünk a LaborNaplóban</div><h1>A laboreredményeid,<br>egy helyen.</h1><p class="subheading">Töltsd fel az első leletedet, a többit együtt követheted.</p></div>
+            <button class="primary-btn" id="topUpload">＋ Új lelet feltöltése</button>
+          </div>
+
+          <section class="card upload-card" id="upload-area">
+            <div class="upload-card-head"><div><h2>Új laborlelet</h2><div class="small-muted">Kezdd a dokumentum kiválasztásával.</div></div><span class="prototype-tag">PROTOTÍPUS</span></div>
+            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Laborlelet kiválasztása">
+              <div class="upload-icon">↑</div>
+              <strong>Húzd ide a laborleletedet</strong>
+              <p>Vagy válaszd ki az eszközödről.</p>
+              <button type="button" class="primary-btn" id="chooseFile">Fájl kiválasztása</button>
+              <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" hidden />
+              <div class="file-hint">PDF, JPG vagy PNG · legfeljebb 20 MB</div>
+            </div>
+            <div class="selected-file" id="selectedFile">
+              <div class="file-info"><div class="file-badge">▤</div><div><div class="file-name" id="fileName"></div><div class="file-size" id="fileSize"></div></div></div>
+              <button class="remove-file" id="removeFile" aria-label="Fájl eltávolítása">×</button>
+            </div>
+            <div class="notice"><span>ⓘ</span><div><b>Adatvédelem:</b> ez jelenleg egy felületi prototípus. A kiválasztott fájl nem kerül feltöltésre és nem hagyja el az eszközödet. A valódi, titkosított feltöltést az Azure-háttér bekötésekor készítjük el.</div></div>
+          </section>
+
+          <div class="section-head"><h2>Legutóbbi eredményeid</h2><span class="small-muted">Még nincs adat</span></div>
+          <div class="card empty-card"><div class="empty-icon">⌁</div><div><strong>Itt jelennek majd meg az eredményeid</strong><p>Az első lelet feldolgozása után itt láthatod a legfontosabb értékeket és azok változását.</p></div></div>
+
+          <div class="section-head"><h2>Így működik</h2></div>
+          <div class="steps">
+            <div class="step"><div class="step-num">01</div><div><strong>Feltöltöd a leletet</strong><p>PDF vagy fénykép – nem kell kézzel begépelned az adatokat.</p></div></div>
+            <div class="step"><div class="step-num">02</div><div><strong>Ellenőrzöd az adatokat</strong><p>Átnézheted, hogy a rendszer jól olvasta-e ki az értékeket.</p></div></div>
+            <div class="step"><div class="step-num">03</div><div><strong>Követed a változásokat</strong><p>Az új eredmények összevethetők lesznek a korábbi leleteiddel.</p></div></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-results">
+          <div class="header-row"><div><div class="eyebrow">Saját előzmények</div><h1>Eredményeim</h1><p class="subheading">A laborértékeid időbeli alakulása egy helyen.</p></div></div>
+          <div class="card content-card empty-large"><div class="upload-icon">⌁</div><h2>Még nincsenek eredményeid</h2><p>Amint feltöltesz és jóváhagysz egy laborleletet, itt jelennek meg a vizsgálati értékeid és az összehasonlítások.</p><button class="primary-btn" data-go="home">＋ Első lelet feltöltése</button></div>
+        </section>
+
+        <section class="page" id="page-documents">
+          <div class="header-row"><div><div class="eyebrow">Dokumentumtár</div><h1>Leleteim</h1><p class="subheading">Az általad feltöltött laborleletek listája.</p></div><button class="primary-btn" data-go="home">＋ Új lelet</button></div>
+          <div class="card content-card empty-large"><div class="upload-icon">▤</div><h2>Még nem töltöttél fel leletet</h2><p>A dokumentumaid itt lesznek elérhetők, dátum és laboratórium szerint rendezve.</p><button class="secondary-btn" data-go="home">Vissza az áttekintéshez</button></div>
+        </section>
+
+        <section class="page" id="page-profile">
+          <div class="header-row"><div><div class="eyebrow">Személyre szabás</div><h1>Saját adataim</h1><p class="subheading">Később itt adhatod meg az értelmezéshez fontos háttérinformációkat.</p></div></div>
+          <div class="card content-card">
+            <h2>Személyes profil</h2>
+            <p class="small-muted">A profil kitöltése nem lesz kötelező az alkalmazás használatához.</p>
+            <div class="profile-grid">
+              <div class="profile-field"><span>Alapadatok</span><strong>Életkor, nem, alapadatok</strong></div>
+              <div class="profile-field"><span>Egészségügyi előzmények</span><strong>Általad megadott állapotok</strong></div>
+              <div class="profile-field"><span>Gyógyszerek</span><strong>Rendszeresen szedett készítmények</strong></div>
+              <div class="profile-field"><span>Adatvédelem</span><strong>Adatok exportálása és törlése</strong></div>
+            </div>
+            <div class="notice"><span>ⓘ</span><div>Ezeket a funkciókat később építjük be. Egészségügyi adatot ebben a prototípusban még ne adj meg.</div></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Mobil navigáció">
+      <button class="active" data-page="home"><span class="nav-icon">⌂</span><span>Áttekintés</span></button>
+      <button data-page="results"><span class="nav-icon">⌁</span><span>Eredményeim</span></button>
+      <button data-page="documents"><span class="nav-icon">▤</span><span>Leleteim</span></button>
+      <button data-page="profile"><span class="nav-icon">♙</span><span>Profilom</span></button>
+    </nav>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/app.js" defer></script>
+</body>
+</html>
