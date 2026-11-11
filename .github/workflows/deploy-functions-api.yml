@@ -1,0 +1,55 @@
+name: Deploy LaborNapló API
+
+on:
+  push:
+    branches:
+      - feature/azure-functions-api
+    paths:
+      - 'functions-api/**'
+      - '.github/workflows/deploy-functions-api.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: labor-naplo-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install production dependencies
+        working-directory: functions-api
+        run: npm install --omit=dev
+
+      - name: Check JavaScript syntax
+        working-directory: functions-api
+        run: |
+          node --check src/index.js
+          node --check src/functions/health.js
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy standalone API
+        uses: Azure/functions-action@v1
+        with:
+          app-name: labor-naplo-api
+          package: ./functions-api
