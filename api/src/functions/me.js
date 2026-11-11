@@ -11,12 +11,7 @@ app.http('me', {
   authLevel: 'anonymous',
   route: 'me',
   handler: async (request, context) => {
-    context.log('[LaborNapló] Beérkező hitelesítési fejlécek:', {
-  authorization: Boolean(request.headers.get('authorization')),
-  swaAuthToken: Boolean(request.headers.get('x-ms-auth-token')),
-  clientPrincipal: Boolean(request.headers.get('x-ms-client-principal'))
-});
-    try {
+        try {
       const user = await authenticateRequest(request);
 
       return {
@@ -38,18 +33,9 @@ app.http('me', {
             'WWW-Authenticate': 'Bearer'
           },
           jsonBody: {
-            error: 'unauthorized',
-            message: 'Érvényes bejelentkezés szükséges.',
-            ...(process.env.AUTH_DIAGNOSTICS === 'true' ? {
-              diagnosticCode: error.reason || 'TOKEN_REJECTED',
-              joseCode: error.joseCode || null,
-              joseName: error.joseName || null,
-              tokenAlgorithm: error.algorithm || null,
-              tokenHasKeyId: error.keyIdPresent === true,
-              requestHasAuthorization: Boolean(request.headers.get('authorization')),
-requestHasSwaAuthToken: Boolean(request.headers.get('x-ms-auth-token')),
-requestHasClientPrincipal: Boolean(request.headers.get('x-ms-client-principal'))
-            } : {})
+  error: 'unauthorized',
+  message: 'Érvényes bejelentkezés szükséges.'
+}
           }
         };
       }
