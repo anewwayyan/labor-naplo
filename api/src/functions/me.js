@@ -33,12 +33,11 @@ app.http('me', {
             'WWW-Authenticate': 'Bearer'
           },
           jsonBody: {
-  error: 'unauthorized',
-  message: 'Érvényes bejelentkezés szükséges.'
-}
-          }
-        };
-      }
+          error: 'unauthorized',
+          message: 'Érvényes bejelentkezés szükséges.'
+        }
+      };
+    }
 
       if (error instanceof AuthConfigurationError || error?.code === 'AUTH_CONFIGURATION_ERROR') {
         context.error('LaborNapló API authentication configuration error:', error.message);
