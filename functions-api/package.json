@@ -1,0 +1,13 @@
+{
+  "name": "labornaplo-functions-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone Azure Functions API for LaborNapló",
+  "main": "src/index.js",
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@azure/functions": "4.17.0"
+  }
+}
