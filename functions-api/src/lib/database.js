@@ -73,6 +73,9 @@ async function withUserDatabaseContext(user, operation) {
   const ownerUserId = requireGuid(user.userId, 'userId');
 
   const pool = new sql.ConnectionPool(createPoolConfig());
+  pool.on('error', (error) => {
+    console.error('LaborNapló SQL pool error:', error?.code || error?.name || 'UNKNOWN');
+  });
   const transaction = new sql.Transaction(pool);
   let transactionStarted = false;
 
