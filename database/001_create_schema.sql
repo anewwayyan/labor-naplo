@@ -10,8 +10,9 @@ Security rollout is intentionally separate:
 1. The Functions API must derive tenant_id and owner_user_id only from its
    already-validated Entra External ID token.
 2. It must set SESSION_CONTEXT on the exact SQL connection used by the query.
-3. It must clear both values in a finally block before returning a pooled
-   connection. If cleanup fails, the connection must be discarded, not reused.
+3. The API sets both values read-only and uses a request-scoped SQL pool that is
+   physically closed before the HTTP request finishes. Do not share that pool
+   between users or retain its connections across requests.
 4. Only then should the RLS predicate and security policy be enabled and tested.
 
 SESSION_CONTEXT values are not cryptographically protected: any database
@@ -66,7 +67,7 @@ BEGIN
     (
         ReportId          uniqueidentifier NOT NULL CONSTRAINT DF_LabReports_ReportId DEFAULT (NEWSEQUENTIALID()),
         TenantId          uniqueidentifier NOT NULL,
-        OwnerUserId       nvarchar(255) NOT NULL,
+        OwnerUserId       uniqueidentifier NOT NULL,
         LabName           nvarchar(200) NULL,
         SampleDate        date NULL,
         OriginalFileName  nvarchar(260) NOT NULL,
@@ -97,7 +98,7 @@ BEGIN
     (
         ExtractedValueId      uniqueidentifier NOT NULL CONSTRAINT DF_ExtractedLabValues_Id DEFAULT (NEWSEQUENTIALID()),
         TenantId              uniqueidentifier NOT NULL,
-        OwnerUserId           nvarchar(255) NOT NULL,
+        OwnerUserId       uniqueidentifier NOT NULL,
         ReportId              uniqueidentifier NOT NULL,
         SourcePageNumber      smallint NULL,
         RawParameterName      nvarchar(200) NOT NULL,
@@ -132,7 +133,7 @@ BEGIN
     (
         LabValueId            uniqueidentifier NOT NULL CONSTRAINT DF_LabValues_Id DEFAULT (NEWSEQUENTIALID()),
         TenantId              uniqueidentifier NOT NULL,
-        OwnerUserId           nvarchar(255) NOT NULL,
+        OwnerUserId       uniqueidentifier NOT NULL,
         ReportId              uniqueidentifier NOT NULL,
         ExtractedValueId      uniqueidentifier NULL,
         ParameterId           int NULL,
@@ -180,11 +181,11 @@ BEGIN
     (
         HistoryId          bigint IDENTITY(1,1) NOT NULL,
         TenantId           uniqueidentifier NOT NULL,
-        OwnerUserId        nvarchar(255) NOT NULL,
+        OwnerUserId       uniqueidentifier NOT NULL,
         ReportId           uniqueidentifier NOT NULL,
         LabValueId         uniqueidentifier NOT NULL,
         ChangeType         nvarchar(20) NOT NULL,
-        ChangedByUserId    nvarchar(255) NOT NULL,
+        ChangedByUserId    uniqueidentifier NOT NULL,
         OldSnapshotJson    nvarchar(max) NULL,
         NewSnapshotJson    nvarchar(max) NOT NULL,
         ChangedAt          datetime2(3) NOT NULL CONSTRAINT DF_LabValueHistory_ChangedAt DEFAULT (SYSUTCDATETIME()),
@@ -198,6 +199,8 @@ BEGIN
             REFERENCES dbo.LabValues (TenantId, OwnerUserId, ReportId, LabValueId),
         CONSTRAINT CK_LabValueHistory_ChangeType
             CHECK (ChangeType IN (N'Created', N'Updated', N'Deleted', N'Approved')),
+        CONSTRAINT CK_LabValueHistory_ChangedByOwner
+            CHECK (ChangedByUserId = OwnerUserId),
         CONSTRAINT CK_LabValueHistory_OldJson
             CHECK (OldSnapshotJson IS NULL OR ISJSON(OldSnapshotJson) = 1),
         CONSTRAINT CK_LabValueHistory_NewJson
