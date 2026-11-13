@@ -40,6 +40,10 @@ jobs:
         run: |
           node --check src/index.js
           node --check src/functions/health.js
+          node --check src/functions/me.js
+          node --check src/functions/db-check.js
+          node --check src/lib/auth.js
+          node --check src/lib/database.js
 
       - name: Sign in to Azure with OIDC
         uses: azure/login@v3
