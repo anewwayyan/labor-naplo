@@ -142,6 +142,8 @@ BEGIN
         ReferenceLow          decimal(18,6) NULL,
         ReferenceHigh         decimal(18,6) NULL,
         IsAbnormal            bit NULL,
+        IsDeleted             bit NOT NULL CONSTRAINT DF_LabValues_IsDeleted DEFAULT (0),
+        DeletedAt             datetime2(3) NULL,
         CreatedAt             datetime2(3) NOT NULL CONSTRAINT DF_LabValues_CreatedAt DEFAULT (SYSUTCDATETIME()),
         UpdatedAt             datetime2(3) NOT NULL CONSTRAINT DF_LabValues_UpdatedAt DEFAULT (SYSUTCDATETIME()),
         RowVersion            rowversion NOT NULL,
@@ -164,7 +166,9 @@ BEGIN
                 (ValueNumeric IS NULL AND ValueText IS NOT NULL)
             ),
         CONSTRAINT CK_LabValues_ReferenceRange
-            CHECK (ReferenceLow IS NULL OR ReferenceHigh IS NULL OR ReferenceLow <= ReferenceHigh)
+            CHECK (ReferenceLow IS NULL OR ReferenceHigh IS NULL OR ReferenceLow <= ReferenceHigh),
+        CONSTRAINT CK_LabValues_DeleteState
+            CHECK ((IsDeleted = 0 AND DeletedAt IS NULL) OR (IsDeleted = 1 AND DeletedAt IS NOT NULL))
     );
 END;
 
@@ -187,6 +191,9 @@ BEGIN
         CONSTRAINT FK_LabValueHistory_LabReports
             FOREIGN KEY (TenantId, OwnerUserId, ReportId)
             REFERENCES dbo.LabReports (TenantId, OwnerUserId, ReportId),
+        CONSTRAINT FK_LabValueHistory_LabValues
+            FOREIGN KEY (TenantId, OwnerUserId, ReportId, LabValueId)
+            REFERENCES dbo.LabValues (TenantId, OwnerUserId, ReportId, LabValueId),
         CONSTRAINT CK_LabValueHistory_ChangeType
             CHECK (ChangeType IN (N'Created', N'Updated', N'Deleted', N'Approved')),
         CONSTRAINT CK_LabValueHistory_OldJson
@@ -215,7 +222,8 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_LabValues_Report' AND
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_LabValues_Trend' AND object_id = OBJECT_ID(N'dbo.LabValues'))
     CREATE INDEX IX_LabValues_Trend
-        ON dbo.LabValues (TenantId, OwnerUserId, ParameterId, Unit);
+        ON dbo.LabValues (TenantId, OwnerUserId, ParameterId, Unit)
+        WHERE IsDeleted = 0;
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_LabValueHistory_Value_ChangedAt' AND object_id = OBJECT_ID(N'dbo.LabValueHistory'))
     CREATE INDEX IX_LabValueHistory_Value_ChangedAt
