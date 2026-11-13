@@ -3,12 +3,24 @@ LaborNapló - initial Azure SQL schema
 Target: labor-naplo-db
 Branch: feature/azure-functions-api
 
-IMPORTANT:
-- This migration creates tables, keys, checks and indexes only.
-- It intentionally does NOT grant API permissions or enable Row-Level Security yet.
-- RLS will be enabled in a separate migration after the Functions API reliably sets
-  and clears tenant_id / owner_user_id SESSION_CONTEXT values for every SQL connection.
-- Do not store PDF bytes in SQL; BlobName points to the private Blob Storage object.
+This migration creates the six core tables, constraints and indexes.
+It does NOT enable Row-Level Security or grant database permissions.
+
+Security rollout is intentionally separate:
+1. The Functions API must derive tenant_id and owner_user_id only from its
+   already-validated Entra External ID token.
+2. It must set SESSION_CONTEXT on the exact SQL connection used by the query.
+3. It must clear both values in a finally block before returning a pooled
+   connection. If cleanup fails, the connection must be discarded, not reused.
+4. Only then should the RLS predicate and security policy be enabled and tested.
+
+SESSION_CONTEXT values are not cryptographically protected: any database
+principal able to execute sp_set_session_context can set them. RLS is therefore
+defense in depth; API authorization, parameterized SQL and least privilege
+remain mandatory.
+
+PDF bytes are stored in private Blob Storage. BlobName is a server-generated
+object name, not a user-supplied path.
 */
 
 SET XACT_ABORT ON;
@@ -72,7 +84,8 @@ BEGIN
         CONSTRAINT UQ_LabReports_BlobName UNIQUE (BlobName),
         CONSTRAINT CK_LabReports_FileSize CHECK (FileSizeBytes > 0),
         CONSTRAINT CK_LabReports_PdfOnly CHECK (ContentType = 'application/pdf'),
-        CONSTRAINT CK_LabReports_Status CHECK (Status IN (N'Draft', N'Review', N'Approved'))
+        CONSTRAINT CK_LabReports_Status
+            CHECK (Status IN (N'Draft', N'Review', N'Approved', N'DeletePending'))
     );
 END;
 
@@ -90,6 +103,8 @@ BEGIN
         ParsedNumericValue    decimal(18,6) NULL,
         Unit                  nvarchar(50) NULL,
         ReferenceRange        nvarchar(100) NULL,
+        ReferenceLow          decimal(18,6) NULL,
+        ReferenceHigh         decimal(18,6) NULL,
         IsAbnormal            bit NULL,
         ExtractionConfidence  decimal(5,4) NULL,
         CreatedAt             datetime2(3) NOT NULL CONSTRAINT DF_ExtractedLabValues_CreatedAt DEFAULT (SYSUTCDATETIME()),
@@ -100,9 +115,12 @@ BEGIN
         CONSTRAINT FK_ExtractedLabValues_LabReports
             FOREIGN KEY (TenantId, OwnerUserId, ReportId)
             REFERENCES dbo.LabReports (TenantId, OwnerUserId, ReportId),
-        CONSTRAINT CK_ExtractedLabValues_Page CHECK (SourcePageNumber IS NULL OR SourcePageNumber > 0),
+        CONSTRAINT CK_ExtractedLabValues_Page
+            CHECK (SourcePageNumber IS NULL OR SourcePageNumber > 0),
         CONSTRAINT CK_ExtractedLabValues_Confidence
-            CHECK (ExtractionConfidence IS NULL OR (ExtractionConfidence >= 0 AND ExtractionConfidence <= 1))
+            CHECK (ExtractionConfidence IS NULL OR (ExtractionConfidence >= 0 AND ExtractionConfidence <= 1)),
+        CONSTRAINT CK_ExtractedLabValues_ReferenceRange
+            CHECK (ReferenceLow IS NULL OR ReferenceHigh IS NULL OR ReferenceLow <= ReferenceHigh)
     );
 END;
 
@@ -110,21 +128,23 @@ IF OBJECT_ID(N'dbo.LabValues', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.LabValues
     (
-        LabValueId          uniqueidentifier NOT NULL CONSTRAINT DF_LabValues_Id DEFAULT (NEWSEQUENTIALID()),
-        TenantId            uniqueidentifier NOT NULL,
-        OwnerUserId         nvarchar(255) NOT NULL,
-        ReportId            uniqueidentifier NOT NULL,
-        ExtractedValueId    uniqueidentifier NULL,
-        ParameterId         int NULL,
+        LabValueId            uniqueidentifier NOT NULL CONSTRAINT DF_LabValues_Id DEFAULT (NEWSEQUENTIALID()),
+        TenantId              uniqueidentifier NOT NULL,
+        OwnerUserId           nvarchar(255) NOT NULL,
+        ReportId              uniqueidentifier NOT NULL,
+        ExtractedValueId      uniqueidentifier NULL,
+        ParameterId           int NULL,
         OriginalParameterName nvarchar(200) NOT NULL,
-        ValueNumeric        decimal(18,6) NULL,
-        ValueText           nvarchar(200) NULL,
-        Unit                nvarchar(50) NULL,
-        ReferenceRange      nvarchar(100) NULL,
-        IsAbnormal          bit NULL,
-        CreatedAt           datetime2(3) NOT NULL CONSTRAINT DF_LabValues_CreatedAt DEFAULT (SYSUTCDATETIME()),
-        UpdatedAt           datetime2(3) NOT NULL CONSTRAINT DF_LabValues_UpdatedAt DEFAULT (SYSUTCDATETIME()),
-        RowVersion          rowversion NOT NULL,
+        ValueNumeric          decimal(18,6) NULL,
+        ValueText             nvarchar(200) NULL,
+        Unit                  nvarchar(50) NULL,
+        ReferenceRange        nvarchar(100) NULL,
+        ReferenceLow          decimal(18,6) NULL,
+        ReferenceHigh         decimal(18,6) NULL,
+        IsAbnormal            bit NULL,
+        CreatedAt             datetime2(3) NOT NULL CONSTRAINT DF_LabValues_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        UpdatedAt             datetime2(3) NOT NULL CONSTRAINT DF_LabValues_UpdatedAt DEFAULT (SYSUTCDATETIME()),
+        RowVersion            rowversion NOT NULL,
 
         CONSTRAINT PK_LabValues PRIMARY KEY (LabValueId),
         CONSTRAINT UQ_LabValues_Owner_Report_Id
@@ -137,8 +157,14 @@ BEGIN
             REFERENCES dbo.ExtractedLabValues (TenantId, OwnerUserId, ReportId, ExtractedValueId),
         CONSTRAINT FK_LabValues_LabParameters
             FOREIGN KEY (ParameterId) REFERENCES dbo.LabParameters(ParameterId),
-        CONSTRAINT CK_LabValues_HasValue
-            CHECK (ValueNumeric IS NOT NULL OR ValueText IS NOT NULL)
+        CONSTRAINT CK_LabValues_ExactlyOneValue
+            CHECK (
+                (ValueNumeric IS NOT NULL AND ValueText IS NULL)
+                OR
+                (ValueNumeric IS NULL AND ValueText IS NOT NULL)
+            ),
+        CONSTRAINT CK_LabValues_ReferenceRange
+            CHECK (ReferenceLow IS NULL OR ReferenceHigh IS NULL OR ReferenceLow <= ReferenceHigh)
     );
 END;
 
@@ -161,11 +187,8 @@ BEGIN
         CONSTRAINT FK_LabValueHistory_LabReports
             FOREIGN KEY (TenantId, OwnerUserId, ReportId)
             REFERENCES dbo.LabReports (TenantId, OwnerUserId, ReportId),
-        CONSTRAINT FK_LabValueHistory_LabValues
-            FOREIGN KEY (TenantId, OwnerUserId, ReportId, LabValueId)
-            REFERENCES dbo.LabValues (TenantId, OwnerUserId, ReportId, LabValueId),
         CONSTRAINT CK_LabValueHistory_ChangeType
-            CHECK (ChangeType IN (N'Created', N'Updated', N'Approved')),
+            CHECK (ChangeType IN (N'Created', N'Updated', N'Deleted', N'Approved')),
         CONSTRAINT CK_LabValueHistory_OldJson
             CHECK (OldSnapshotJson IS NULL OR ISJSON(OldSnapshotJson) = 1),
         CONSTRAINT CK_LabValueHistory_NewJson
@@ -173,10 +196,14 @@ BEGIN
     );
 END;
 
-/* Supporting indexes for report lists, report values and trend queries. */
+/* Supporting indexes for report lists, aliases, report values and trends. */
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_LabReports_Owner_CreatedAt' AND object_id = OBJECT_ID(N'dbo.LabReports'))
     CREATE INDEX IX_LabReports_Owner_CreatedAt
         ON dbo.LabReports (TenantId, OwnerUserId, CreatedAt DESC);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_LabParameterAliases_ParameterId' AND object_id = OBJECT_ID(N'dbo.LabParameterAliases'))
+    CREATE INDEX IX_LabParameterAliases_ParameterId
+        ON dbo.LabParameterAliases (ParameterId);
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_ExtractedLabValues_Report' AND object_id = OBJECT_ID(N'dbo.ExtractedLabValues'))
     CREATE INDEX IX_ExtractedLabValues_Report
