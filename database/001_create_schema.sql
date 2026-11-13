@@ -85,7 +85,9 @@ BEGIN
         CONSTRAINT CK_LabReports_FileSize CHECK (FileSizeBytes > 0),
         CONSTRAINT CK_LabReports_PdfOnly CHECK (ContentType = 'application/pdf'),
         CONSTRAINT CK_LabReports_Status
-            CHECK (Status IN (N'Draft', N'Review', N'Approved', N'DeletePending'))
+            CHECK (Status IN (N'Draft', N'Review', N'Approved', N'DeletePending')),
+        CONSTRAINT CK_LabReports_ApprovedAt
+            CHECK (Status <> N'Approved' OR ApprovedAt IS NOT NULL)
     );
 END;
 
