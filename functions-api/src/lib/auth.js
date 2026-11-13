@@ -161,12 +161,12 @@ async function authenticateRequest(request) {
   const tenantId = String(payload.tid || '').toLowerCase();
   const callingClientId = String(payload.azp || payload.appid || '').toLowerCase();
   const scopes = typeof payload.scp === 'string' ? payload.scp.split(/\s+/) : [];
-  const userId = typeof payload.oid === 'string' ? payload.oid : payload.sub;
+  const userId = typeof payload.oid === 'string' ? payload.oid.toLowerCase() : '';
 
   if (tenantId !== context.tenantId) throw new UnauthorizedError('TENANT_ID_MISMATCH');
   if (callingClientId !== context.spaClientId) throw new UnauthorizedError('CALLING_CLIENT_MISMATCH');
   if (!scopes.includes(context.requiredScope)) throw new UnauthorizedError('REQUIRED_SCOPE_MISSING');
-  if (typeof userId !== 'string' || userId.length === 0) throw new UnauthorizedError('USER_IDENTIFIER_MISSING');
+  if (!GUID_RE.test(userId)) throw new UnauthorizedError('USER_OBJECT_ID_MISSING_OR_INVALID');
 
   return {
     userId,
