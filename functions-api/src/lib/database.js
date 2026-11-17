@@ -18,6 +18,25 @@ function requireGuid(value, fieldName) {
   return value.toLowerCase();
 }
 
+function getSafeErrorDetails(error) {
+  return {
+    name: error?.name || 'Error',
+    code: error?.code || null,
+    number: error?.number ?? null,
+    state: error?.state ?? null,
+    class: error?.class ?? null,
+    lineNumber: error?.lineNumber ?? null,
+    message: typeof error?.message === 'string'
+      ? error.message.slice(0, 500)
+      : 'No error message available.'
+  };
+}
+
+function logDatabaseError(stage, error) {
+  // Do not log access tokens, credentials, or connection configuration.
+  console.error(`LaborNapló SQL ${stage}:`, JSON.stringify(getSafeErrorDetails(error)));
+}
+
 function createPoolConfig() {
   const server = (process.env.AZURE_SQL_SERVER || '').trim();
   const database = (process.env.AZURE_SQL_DATABASE || '').trim();
@@ -74,10 +93,13 @@ async function withUserDatabaseContext(user, operation) {
 
   const pool = new sql.ConnectionPool(createPoolConfig());
   pool.on('error', (error) => {
-    console.error('LaborNapló SQL pool error:', error?.code || error?.name || 'UNKNOWN');
+    logDatabaseError('pool error', error);
   });
+
   const transaction = new sql.Transaction(pool);
   let transactionStarted = false;
+  let result;
+  let operationError;
 
   try {
     await pool.connect();
@@ -99,26 +121,38 @@ async function withUserDatabaseContext(user, operation) {
           @read_only = 1;
       `);
 
-    const result = await operation({ sql, transaction });
+    result = await operation({ sql, transaction });
     await transaction.commit();
     transactionStarted = false;
-    return result;
   } catch (error) {
+    operationError = error;
+
     if (transactionStarted) {
       try {
         await transaction.rollback();
-      } catch {
-        // The connection is still closed in finally. Never reuse a connection
-        // whose transaction cleanup status is uncertain.
+      } catch (rollbackError) {
+        logDatabaseError('transaction rollback failed', rollbackError);
       }
     }
-    throw error;
   } finally {
     // Closing this operation-scoped pool closes its physical connection.
     // This is essential because read_only SESSION_CONTEXT cannot be changed
     // again on the same logical connection.
-    await pool.close();
+    try {
+      await pool.close();
+    } catch (closeError) {
+      // A cleanup failure must not hide the actual SQL error or turn an
+      // already successful database operation into a misleading 503.
+      logDatabaseError('pool close failed', closeError);
+    }
   }
+
+  if (operationError) {
+    logDatabaseError('operation failed', operationError);
+    throw operationError;
+  }
+
+  return result;
 }
 
 module.exports = {
