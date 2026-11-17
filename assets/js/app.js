@@ -49,10 +49,6 @@ const pages = ['home', 'results', 'documents', 'profile'];
       showToast('A fájl kiválasztva. Ez a prototípus még nem tölti fel.');
     }
 
-    document.getElementById('chooseFile').addEventListener('click', event => {
-      event.stopPropagation();
-      fileInput.click();
-    });
     document.getElementById('topUpload').addEventListener('click', () => {
       navigate('home');
       document.getElementById('upload-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
