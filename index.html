@@ -58,10 +58,9 @@
             <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Laborlelet kiválasztása">
               <div class="upload-icon">↑</div>
               <strong>Húzd ide a laborleletedet</strong>
-              <p>Vagy válaszd ki az eszközödről.</p>
-              <button type="button" class="primary-btn" id="chooseFile">Fájl kiválasztása</button>
-              <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" hidden />
-              <div class="file-hint">PDF, JPG vagy PNG · legfeljebb 20 MB</div>
+              <p>Kattints ide, vagy húzd be a dokumentumot az eszközödről.</p>
+              <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden />
+              <div class="file-hint">Kizárólag PDF-fájl · legfeljebb 20 MB</div>
             </div>
             <div class="selected-file" id="selectedFile">
               <div class="file-info"><div class="file-badge">▤</div><div><div class="file-name" id="fileName"></div><div class="file-size" id="fileSize"></div></div></div>
@@ -75,7 +74,7 @@
 
           <div class="section-head"><h2>Így működik</h2></div>
           <div class="steps">
-            <div class="step"><div class="step-num">01</div><div><strong>Feltöltöd a leletet</strong><p>PDF vagy fénykép – nem kell kézzel begépelned az adatokat.</p></div></div>
+            <div class="step"><div class="step-num">01</div><div><strong>Feltöltöd a leletet</strong><p>PDF-dokumentum – nem kell kézzel begépelned az adatokat.</p></div></div>
             <div class="step"><div class="step-num">02</div><div><strong>Ellenőrzöd az adatokat</strong><p>Átnézheted, hogy a rendszer jól olvasta-e ki az értékeket.</p></div></div>
             <div class="step"><div class="step-num">03</div><div><strong>Követed a változásokat</strong><p>Az új eredmények összevethetők lesznek a korábbi leleteiddel.</p></div></div>
           </div>
