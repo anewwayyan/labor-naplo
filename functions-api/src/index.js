@@ -4,3 +4,4 @@
 require('./functions/health');
 require('./functions/me');
 require('./functions/db-check');
+require('./functions/rls-test');
