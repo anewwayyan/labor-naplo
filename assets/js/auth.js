@@ -201,7 +201,7 @@ console.log('LaborNapló token fejléc:', {
       // Temporary RLS isolation diagnostic: create/read this account's own test row.
       // The API derives the owner from the validated access token; no user ID is sent.
       try {
-        const rlsResponse = await fetch('/api/rls-test', {
+        const rlsResponse = await fetch('https://labor-naplo-api-hcd4h0cvbsbyekg0.northeurope-01.azurewebsites.net/api/rls-test', {
           method: 'POST',
           headers: {
             'X-LaborNaplo-Authorization': `Bearer ${tokenResponse.accessToken}`,
