@@ -33,10 +33,11 @@ const pages = ['home', 'results', 'documents', 'profile'];
 
     function handleFile(file) {
       if (!file) return;
-      const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
-      const extensionOK = /\.(pdf|jpe?g|png)$/i.test(file.name);
-      if (!allowed.includes(file.type) && !extensionOK) {
-        showToast('Ezt a fájltípust nem támogatjuk. PDF, JPG vagy PNG fájlt válassz.');
+      const isPdf = /\.pdf$/i.test(file.name) &&
+        (!file.type || file.type === 'application/pdf' || file.type === 'application/octet-stream');
+      if (!isPdf) {
+        showToast('Csak PDF-fájlt lehet kiválasztani.');
+        fileInput.value = '';
         return;
       }
       if (file.size > 20 * 1024 * 1024) {
@@ -49,10 +50,6 @@ const pages = ['home', 'results', 'documents', 'profile'];
       showToast('A fájl kiválasztva. Ez a prototípus még nem tölti fel.');
     }
 
-    document.getElementById('chooseFile').addEventListener('click', event => {
-      event.stopPropagation();
-      fileInput.click();
-    });
     document.getElementById('topUpload').addEventListener('click', () => {
       navigate('home');
       document.getElementById('upload-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
