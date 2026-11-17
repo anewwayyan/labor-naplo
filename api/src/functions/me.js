@@ -11,7 +11,7 @@ app.http('me', {
   authLevel: 'anonymous',
   route: 'me',
   handler: async (request, context) => {
-        try {
+    try {
       const user = await authenticateRequest(request);
 
       return {
@@ -26,6 +26,14 @@ app.http('me', {
       };
     } catch (error) {
       if (error instanceof UnauthorizedError || error?.code === 'UNAUTHORIZED') {
+        // Log and return only the fixed reason code. Never log or expose the
+        // bearer token, decoded claims, or other credential material.
+        const diagnosticCode = typeof error?.reason === 'string'
+          ? error.reason
+          : 'TOKEN_REJECTED';
+
+        context.warn('LaborNapló API rejected bearer token:', diagnosticCode);
+
         return {
           status: 401,
           headers: {
@@ -33,18 +41,22 @@ app.http('me', {
             'WWW-Authenticate': 'Bearer'
           },
           jsonBody: {
-          error: 'unauthorized',
-          message: 'Érvényes bejelentkezés szükséges.'
-        }
-      };
-    }
+            error: 'unauthorized',
+            message: 'Érvényes bejelentkezés szükséges.',
+            diagnosticCode
+          }
+        };
+      }
 
       if (error instanceof AuthConfigurationError || error?.code === 'AUTH_CONFIGURATION_ERROR') {
         context.error('LaborNapló API authentication configuration error:', error.message);
         return {
           status: 503,
           headers: { 'Cache-Control': 'no-store' },
-          jsonBody: { error: 'authentication_not_configured', message: 'A biztonságos API-hitelesítés beállítása még nem teljes.' }
+          jsonBody: {
+            error: 'authentication_not_configured',
+            message: 'A biztonságos API-hitelesítés beállítása még nem teljes.'
+          }
         };
       }
 
@@ -52,7 +64,10 @@ app.http('me', {
       return {
         status: 503,
         headers: { 'Cache-Control': 'no-store' },
-        jsonBody: { error: 'authentication_unavailable', message: 'A hitelesítés jelenleg nem érhető el.' }
+        jsonBody: {
+          error: 'authentication_unavailable',
+          message: 'A hitelesítés jelenleg nem érhető el.'
+        }
       };
     }
   }
