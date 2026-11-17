@@ -8,8 +8,8 @@ window.LABORNAPLO_AUTH_CONFIG = {
   clientId: '1edcad85-b889-428d-93e7-1734fcc6040d',
   // External tenant subdomain (the part before .ciamlogin.com).
   tenantSubdomain: 'labornaplo',
-  redirectUri: 'https://gray-hill-07110e210.4.azurestaticapps.net/',
-  postLogoutRedirectUri: 'https://gray-hill-07110e210.4.azurestaticapps.net/',
+  redirectUri: 'https://gray-hill-07110e210-1.centralus.4.azurestaticapps.net/',
+  postLogoutRedirectUri: 'https://gray-hill-07110e210-1.centralus.4.azurestaticapps.net/',
   // Delegated scope exposed by LaborNaplo-API.
   apiScope: 'api://6ec0ba97-551c-4efc-8e4f-88128c2048c0/access_as_user',
   protectedApiEndpoint: '/api/me'
