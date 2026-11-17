@@ -99,15 +99,19 @@ async function getValidationContext() {
       if (
         issuerUrl.protocol !== 'https:' ||
         !trustedCiamHosts.has(issuerUrl.hostname) ||
-        issuerUrl.pathname.replace(/\/+$/, '') !== expectedIssuerPath ||
-        issuerUrl.search || issuerUrl.hash
+        issuerUrl.pathname.replace(/\\/+$/, '') !== expectedIssuerPath ||
+        issuerUrl.search ||
+        issuerUrl.hash
       ) {
         throw new AuthConfigurationError('The External ID metadata issuer does not match the configured tenant.');
       }
       if (
         jwksUrl.protocol !== 'https:' ||
         !trustedCiamHosts.has(jwksUrl.hostname) ||
-        jwksUrl.username || jwksUrl.password || jwksUrl.search || jwksUrl.hash
+        jwksUrl.username ||
+        jwksUrl.password ||
+        jwksUrl.search ||
+        jwksUrl.hash
       ) {
         throw new AuthConfigurationError('The External ID signing-key URL is not trusted.');
       }
@@ -132,13 +136,39 @@ function getBearerToken(request) {
     request.headers.get('authorization') ||
     request.headers.get('x-labornaplo-authorization') ||
     '';
-  const match = /^Bearer\s+([^\s]+)$/i.exec(header);
+  const match = /^Bearer\\s+([^\\s]+)$/i.exec(header);
 
   if (!match) {
     throw new UnauthorizedError('MISSING_BEARER_TOKEN');
   }
 
   return match[1];
+}
+
+// Convert jose errors to a small allowlist of safe diagnostic codes.
+// Never return raw exception messages, token contents, or decoded claims.
+function getJwtDiagnosticCode(error) {
+  switch (error?.code) {
+    case 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED':
+      return 'JWT_SIGNATURE_INVALID';
+    case 'ERR_JWKS_NO_MATCHING_KEY':
+      return 'JWT_SIGNING_KEY_NOT_FOUND';
+    case 'ERR_JWT_EXPIRED':
+      return 'JWT_EXPIRED';
+    case 'ERR_JWKS_TIMEOUT':
+    case 'ERR_JWKS_FETCH_FAILED':
+    case 'ERR_JWKS_INVALID':
+      return 'JWT_SIGNING_KEYS_UNAVAILABLE';
+    case 'ERR_JWT_CLAIM_VALIDATION_FAILED':
+      if (error.claim === 'iss') return 'JWT_ISSUER_MISMATCH';
+      if (error.claim === 'aud') return 'JWT_AUDIENCE_MISMATCH';
+      return 'JWT_CLAIM_VALIDATION_FAILED';
+    case 'ERR_JWT_INVALID':
+    case 'ERR_JWS_INVALID':
+      return 'JWT_MALFORMED';
+    default:
+      return 'JWT_VALIDATION_FAILED';
+  }
 }
 
 async function authenticateRequest(request) {
@@ -154,13 +184,13 @@ async function authenticateRequest(request) {
       audience: context.apiClientId,
       clockTolerance: 5
     }));
-  } catch {
-    throw new UnauthorizedError('JWT_VERIFICATION_FAILED');
+  } catch (error) {
+    throw new UnauthorizedError(getJwtDiagnosticCode(error));
   }
 
   const tenantId = String(payload.tid || '').toLowerCase();
   const callingClientId = String(payload.azp || payload.appid || '').toLowerCase();
-  const scopes = typeof payload.scp === 'string' ? payload.scp.split(/\s+/) : [];
+  const scopes = typeof payload.scp === 'string' ? payload.scp.split(/\\s+/) : [];
   const userId = typeof payload.oid === 'string' ? payload.oid.toLowerCase() : '';
 
   if (tenantId !== context.tenantId) throw new UnauthorizedError('TENANT_ID_MISMATCH');
