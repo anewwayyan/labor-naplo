@@ -1,4 +1,3 @@
-
 'use strict';
 
 const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -86,10 +85,7 @@ async function getValidationContext() {
         throw new AuthConfigurationError('The External ID metadata is missing issuer or jwks_uri.');
       }
 
-      // External ID documentation has described the issuer host in both
-      // tenant-subdomain and tenant-ID forms. The tenant-specific discovery
-      // document is the source of truth: validate its structure and then use
-      // its exact issuer value for JWT validation (including any trailing slash).
+      // Use the exact issuer from the tenant-specific discovery document.
       let issuerUrl;
       let jwksUrl;
       try {
@@ -116,14 +112,11 @@ async function getValidationContext() {
         throw new AuthConfigurationError('The External ID signing-key URL is not trusted.');
       }
 
-      // jose downloads and caches Microsoft's public signing keys, and refreshes
-      // them when Microsoft rotates keys. No signing key is hard-coded here.
       const { createRemoteJWKSet } = await import('jose');
       const jwks = createRemoteJWKSet(jwksUrl);
 
       return { ...config, issuer: metadata.issuer, jwks };
     })().catch((error) => {
-      // Allow a later invocation to retry after a transient metadata failure.
       validationContextPromise = undefined;
       throw error;
     });
@@ -133,7 +126,12 @@ async function getValidationContext() {
 }
 
 function getBearerToken(request) {
-  const header = request.headers.get('x-labornaplo-authorization') || '';
+  // Accept the standard header for the standalone Functions API and retain
+  // the custom header temporarily for compatibility with the existing SPA.
+  const header =
+    request.headers.get('authorization') ||
+    request.headers.get('x-labornaplo-authorization') ||
+    '';
   const match = /^Bearer\s+([^\s]+)$/i.exec(header);
 
   if (!match) {
@@ -163,12 +161,12 @@ async function authenticateRequest(request) {
   const tenantId = String(payload.tid || '').toLowerCase();
   const callingClientId = String(payload.azp || payload.appid || '').toLowerCase();
   const scopes = typeof payload.scp === 'string' ? payload.scp.split(/\s+/) : [];
-  const userId = typeof payload.oid === 'string' ? payload.oid : payload.sub;
+  const userId = typeof payload.oid === 'string' ? payload.oid.toLowerCase() : '';
 
   if (tenantId !== context.tenantId) throw new UnauthorizedError('TENANT_ID_MISMATCH');
   if (callingClientId !== context.spaClientId) throw new UnauthorizedError('CALLING_CLIENT_MISMATCH');
   if (!scopes.includes(context.requiredScope)) throw new UnauthorizedError('REQUIRED_SCOPE_MISSING');
-  if (typeof userId !== 'string' || userId.length === 0) throw new UnauthorizedError('USER_IDENTIFIER_MISSING');
+  if (!GUID_RE.test(userId)) throw new UnauthorizedError('USER_OBJECT_ID_MISSING_OR_INVALID');
 
   return {
     userId,
