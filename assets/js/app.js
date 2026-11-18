@@ -330,7 +330,7 @@ document.getElementById('pdfPreviewClose').addEventListener('click', closePdfPre
 document.getElementById('pdfPreviewBackdrop').addEventListener('click', closePdfPreview);
 document.getElementById('pdfPreviewFullscreen').addEventListener('click', async () => {
   try {
-    if (!document.fullscreenElement) await pdfPreview.requestFullscreen();
+    if (!document.fullscreenElement) await pdfPreview.querySelector('.pdf-preview-panel').requestFullscreen();
     else await document.exitFullscreen();
   } catch (error) {
     showToast('A teljes képernyős mód nem érhető el ebben a böngészőben.');
