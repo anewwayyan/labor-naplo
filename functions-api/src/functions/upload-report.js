@@ -87,8 +87,9 @@ function getOriginalFileName(request) {
 
   if (!safeName || !/\.pdf$/i.test(safeName)) return null;
 
-  // SQL nvarchar(260) stores at most 260 UTF-16 code units.
-  return safeName.slice(0, 260);
+  // SQL nvarchar(260) stores at most 260 UTF-16 code units; preserve the extension.
+  if (safeName.length <= 260) return safeName;
+  return safeName.slice(0, 256) + '.pdf';
 }
 
 function errorResponse(status, error, message) {
