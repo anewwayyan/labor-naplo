@@ -31,6 +31,7 @@ function isConfigured() {
     AUTH_CONFIG.clientId &&
     AUTH_CONFIG.tenantSubdomain &&
     AUTH_CONFIG.apiScope &&
+    AUTH_CONFIG.apiBaseUrl &&
     !AUTH_CONFIG.clientId.includes('PASTE_') &&
     !AUTH_CONFIG.apiScope.includes('API_APP_CLIENT_ID')
   );
