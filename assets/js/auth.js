@@ -157,6 +157,62 @@ async function startAuthentication() {
         return result.reports;
       },
 
+      async deleteReport(reportId) {
+        const currentAccount = msalInstance.getActiveAccount();
+        if (!currentAccount) {
+          throw new Error('A törléshez előbb be kell jelentkezned.');
+        }
+        if (typeof reportId !== 'string' || !/^[0-9a-f-]{36}$/i.test(reportId)) {
+          throw new Error('Érvénytelen leletazonosító.');
+        }
+
+        let accessToken;
+        try {
+          const tokenResult = await msalInstance.acquireTokenSilent({
+            scopes: [AUTH_CONFIG.apiScope],
+            account: currentAccount
+          });
+          accessToken = tokenResult.accessToken;
+        } catch (error) {
+          if (error instanceof InteractionRequiredAuthError ||
+              error?.errorCode === 'interaction_required' ||
+              error?.errorCode === 'consent_required') {
+            const tokenResult = await msalInstance.acquireTokenPopup({
+              scopes: [AUTH_CONFIG.apiScope],
+              account: currentAccount
+            });
+            accessToken = tokenResult.accessToken;
+          } else {
+            throw error;
+          }
+        }
+
+        const response = await fetch(
+          `${AUTH_CONFIG.apiBaseUrl}/api/reports/${encodeURIComponent(reportId)}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              Accept: 'application/json'
+            },
+            cache: 'no-store'
+          }
+        );
+
+        let result = {};
+        try { result = await response.json(); } catch { /* use a safe generic message */ }
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('A munkamenet lejárt vagy az API nem fogadta el a bejelentkezést. Frissítsd az oldalt, majd próbáld újra.');
+          }
+          throw new Error(result.message || 'A lelet törlése nem sikerült. Próbáld újra később.');
+        }
+        if (result.deleted !== true) {
+          throw new Error('A szerver nem igazolta a lelet törlését.');
+        }
+        return result;
+      },
+
       async uploadPdf(file) {
         const currentAccount = msalInstance.getActiveAccount();
         if (!currentAccount) {
