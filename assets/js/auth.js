@@ -198,6 +198,29 @@ console.log('LaborNapló token fejléc:', {
         throw new Error('Az API nem igazolta a bejelentkezést.');
       }
 
+      // Temporary RLS isolation diagnostic: create/read this account's own test row.
+      // The API derives the owner from the validated access token; no user ID is sent.
+      try {
+        const rlsResponse = await fetch('/api/rls-test', {
+          method: 'POST',
+          headers: {
+            'X-LaborNaplo-Authorization': `Bearer ${tokenResponse.accessToken}`,
+            Accept: 'application/json'
+          },
+          cache: 'no-store',
+          credentials: 'same-origin'
+        });
+        let rlsResult = null;
+        try { rlsResult = await rlsResponse.json(); } catch { /* report status below */ }
+        console.info('[LaborNapló RLS test]', {
+          status: rlsResponse.status,
+          ok: rlsResponse.ok,
+          result: rlsResult
+        });
+      } catch (rlsError) {
+        console.warn('[LaborNapló RLS test] A teszthívás nem sikerült:', rlsError?.message || rlsError);
+      }
+
       showSignedIn(currentAccount);
     }
 
