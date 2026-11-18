@@ -131,6 +131,25 @@
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="pdf-preview" id="pdfPreview" hidden role="dialog" aria-modal="true" aria-labelledby="pdfPreviewTitle">
+    <div class="pdf-preview-backdrop" id="pdfPreviewBackdrop"></div>
+    <section class="pdf-preview-panel">
+      <header class="pdf-preview-header">
+        <div class="pdf-preview-heading">
+          <strong id="pdfPreviewTitle">Laborlelet.pdf</strong>
+          <span>Biztonságos dokumentum-megjelenítő</span>
+        </div>
+        <div class="pdf-preview-actions">
+          <button type="button" class="secondary-btn" id="pdfPreviewFullscreen">Teljes képernyő</button>
+          <button type="button" class="pdf-preview-close" id="pdfPreviewClose" aria-label="PDF-megjelenítő bezárása">×</button>
+        </div>
+      </header>
+      <div class="pdf-preview-status" id="pdfPreviewLoading" hidden>A PDF betöltése…</div>
+      <div class="pdf-preview-status pdf-preview-error" id="pdfPreviewError" role="alert" hidden></div>
+      <iframe id="pdfPreviewFrame" title="A feltöltött laborlelet PDF-dokumentuma" src="about:blank"></iframe>
+    </section>
+  </div>
+
 
   <script src="assets/js/auth-config.js"></script>
   <script src="assets/js/app.js" defer></script>
