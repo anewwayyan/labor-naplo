@@ -157,6 +157,64 @@ async function startAuthentication() {
         return result.reports;
       },
 
+      async getReportPdf(reportId) {
+        const currentAccount = msalInstance.getActiveAccount();
+        if (!currentAccount) {
+          throw new Error('A PDF megtekintéséhez előbb be kell jelentkezned.');
+        }
+        if (typeof reportId !== 'string' || !/^[0-9a-f-]{36}$/i.test(reportId)) {
+          throw new Error('Érvénytelen leletazonosító.');
+        }
+
+        let accessToken;
+        try {
+          const tokenResult = await msalInstance.acquireTokenSilent({
+            scopes: [AUTH_CONFIG.apiScope],
+            account: currentAccount
+          });
+          accessToken = tokenResult.accessToken;
+        } catch (error) {
+          if (error instanceof InteractionRequiredAuthError ||
+              error?.errorCode === 'interaction_required' ||
+              error?.errorCode === 'consent_required') {
+            const tokenResult = await msalInstance.acquireTokenPopup({
+              scopes: [AUTH_CONFIG.apiScope],
+              account: currentAccount
+            });
+            accessToken = tokenResult.accessToken;
+          } else {
+            throw error;
+          }
+        }
+
+        const response = await fetch(
+          `${AUTH_CONFIG.apiBaseUrl}/api/reports/${encodeURIComponent(reportId)}/pdf`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              Accept: 'application/pdf'
+            },
+            cache: 'no-store'
+          }
+        );
+
+        if (!response.ok) {
+          let result = {};
+          try { result = await response.json(); } catch { /* use a safe generic message */ }
+          if (response.status === 401) {
+            throw new Error('A munkamenet lejárt. Frissítsd az oldalt, majd próbáld újra.');
+          }
+          throw new Error(result.message || 'A PDF megnyitása nem sikerült. Próbáld újra később.');
+        }
+
+        const blob = await response.blob();
+        if (blob.type !== 'application/pdf' || blob.size === 0 || blob.size > 20 * 1024 * 1024) {
+          throw new Error('A szerver nem érvényes PDF-dokumentumot küldött.');
+        }
+        return blob;
+      },
+
       async deleteReport(reportId) {
         const currentAccount = msalInstance.getActiveAccount();
         if (!currentAccount) {
