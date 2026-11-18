@@ -155,7 +155,7 @@ function clearSelectedFile() {
 
 function handleFile(file) {
   if (!file) return;
-  const isPdf = /\\.pdf$/i.test(file.name) &&
+  const isPdf = /\.pdf$/i.test(file.name) &&
     (!file.type || file.type === 'application/pdf' || file.type === 'application/octet-stream');
   if (!isPdf) {
     clearSelectedFile();
