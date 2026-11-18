@@ -71,6 +71,30 @@ function appendReportDetail(container, label, value) {
   container.append(item);
 }
 
+async function deleteReport(reportId, button) {
+  if (!window.confirm('Biztosan törlöd ezt a leletet? A PDF-fájl eltávolításra kerül, és a művelet nem vonható vissza.')) {
+    return;
+  }
+  if (!window.LABORNAPLO_AUTH?.deleteReport) {
+    showToast('A törlés szolgáltatás még nem érhető el. Frissítsd az oldalt később.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Törlés…';
+  try {
+    await window.LABORNAPLO_AUTH.deleteReport(reportId);
+    reportsLoaded = false;
+    showToast('A lelet törlése sikerült.');
+    await loadReports(true);
+  } catch (error) {
+    console.error('[LaborNapló report delete]', error);
+    showToast(error?.message || 'A lelet törlése nem sikerült. Próbáld újra.');
+    button.disabled = false;
+    button.textContent = 'Törlés';
+  }
+}
+
 function renderReports(reports) {
   reportsList.replaceChildren();
   reportsCount.textContent = `${reports.length} ${reports.length === 1 ? 'lelet' : 'lelet'}`;
@@ -102,10 +126,20 @@ function renderReports(reports) {
     nameWrap.append(name, uploaded);
     file.append(icon, nameWrap);
 
+    const actions = document.createElement('div');
+    actions.className = 'report-card-actions';
     const status = document.createElement('span');
     status.className = `report-status ${report.status === 'Approved' ? 'is-approved' : report.status === 'Draft' ? 'is-draft' : ''}`;
     status.textContent = statusText(report.status);
-    header.append(file, status);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'report-delete-btn';
+    deleteButton.textContent = 'Törlés';
+    deleteButton.setAttribute('aria-label', `Lelet törlése: ${report.originalFileName || 'Névtelen lelet'}`);
+    deleteButton.addEventListener('click', () => deleteReport(report.reportId, deleteButton));
+    actions.append(status, deleteButton);
+    header.append(file, actions);
 
     const details = document.createElement('div');
     details.className = 'report-details';

@@ -126,6 +126,10 @@
     .report-file-name { min-width: 0; display: grid; gap: 3px; }
     .report-file-name strong { font-size: 13px; overflow-wrap: anywhere; }
     .report-file-name span { color: var(--muted); font-size: 11px; }
+    .report-card-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .report-delete-btn { border: 1px solid #efd7d3; border-radius: 9px; background: #fff; color: #a04439; padding: 5px 10px; font-size: 11px; font-weight: 700; }
+    .report-delete-btn:hover { background: #fff5f3; }
+    .report-delete-btn:disabled { opacity: .55; cursor: wait; }
     .report-status { flex: 0 0 auto; display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 9px; background: #f0f3f2; color: #63716b; font-size: 10px; font-weight: 750; }
     .report-status.is-draft { background: var(--warning-soft); color: #8b5c17; }
     .report-status.is-approved { background: var(--primary-soft); color: var(--primary-dark); }
