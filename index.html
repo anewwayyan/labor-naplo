@@ -87,7 +87,22 @@
 
         <section class="page" id="page-documents">
           <div class="header-row"><div><div class="eyebrow">Dokumentumtár</div><h1>Leleteim</h1><p class="subheading">Az általad feltöltött laborleletek listája.</p></div><button class="primary-btn" data-go="home">＋ Új lelet</button></div>
-          <div class="card content-card empty-large"><div class="upload-icon">▤</div><h2>Még nem töltöttél fel leletet</h2><p>A dokumentumaid itt lesznek elérhetők, dátum és laboratórium szerint rendezve.</p><button class="secondary-btn" data-go="home">Vissza az áttekintéshez</button></div>
+          <div class="section-head reports-section-head">
+            <h2>Feltöltött dokumentumok</h2>
+            <div class="reports-toolbar">
+              <span class="small-muted" id="reportsCount">— lelet</span>
+              <button type="button" class="secondary-btn" id="refreshReports">Frissítés</button>
+            </div>
+          </div>
+          <div class="card content-card reports-message" id="reportsLoading">Leletek betöltése…</div>
+          <div class="card content-card empty-large" id="reportsEmpty" hidden>
+            <div class="upload-icon">▤</div>
+            <h2>Még nem töltöttél fel leletet</h2>
+            <p>A dokumentumaid itt lesznek elérhetők, dátum és laboratórium szerint rendezve.</p>
+            <button class="secondary-btn" data-go="home">Vissza az áttekintéshez</button>
+          </div>
+          <div class="card content-card reports-message reports-error" id="reportsError" role="alert" hidden></div>
+          <div class="reports-list" id="reportsList" aria-live="polite"></div>
         </section>
 
         <section class="page" id="page-profile">
