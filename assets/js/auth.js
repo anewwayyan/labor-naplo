@@ -104,7 +104,8 @@ async function startAuthentication() {
 
     await msalInstance.initialize();
 
-    // Expose authenticated report-list retrieval alongside PDF upload.
+    // Expose only the authenticated PDF upload operation to the frontend UI.
+    // The API independently validates the Entra access token before accepting data.
     window.LABORNAPLO_AUTH = {
       async listReports() {
         const currentAccount = msalInstance.getActiveAccount();
@@ -156,9 +157,6 @@ async function startAuthentication() {
         return result.reports;
       },
 
-    // Expose only the authenticated PDF upload operation to the frontend UI.
-    // The API independently validates the Entra access token before accepting data.
-    window.LABORNAPLO_AUTH = {
       async uploadPdf(file) {
         const currentAccount = msalInstance.getActiveAccount();
         if (!currentAccount) {
