@@ -161,7 +161,7 @@ app.http('uploadReport', {
           .input('contentType', sql.VarChar(100), PDF_CONTENT_TYPE)
           .input('fileSizeBytes', sql.BigInt, fileBuffer.length);
 
-        return insertRequest.query(`
+        const insertResult = await insertRequest.query(`
           INSERT INTO dbo.LabReports
           (
             ReportId,
@@ -194,6 +194,12 @@ app.http('uploadReport', {
           FROM dbo.LabReports
           WHERE ReportId = @reportId;
         `);
+
+        if (!insertResult.recordset?.[0]) {
+          throw new Error('REPORT_INSERT_NOT_VISIBLE');
+        }
+
+        return insertResult;
       });
 
       const report = result.recordset[0];
