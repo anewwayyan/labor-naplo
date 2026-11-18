@@ -103,6 +103,65 @@ async function startAuthentication() {
 
     await msalInstance.initialize();
 
+    // Expose only the authenticated PDF upload operation to the frontend UI.
+    // The API independently validates the Entra access token before accepting data.
+    window.LABORNAPLO_AUTH = {
+      async uploadPdf(file) {
+        const currentAccount = msalInstance.getActiveAccount();
+        if (!currentAccount) {
+          throw new Error('A feltöltéshez előbb be kell jelentkezned.');
+        }
+        if (!(file instanceof File)) {
+          throw new Error('Nem sikerült beolvasni a kiválasztott fájlt.');
+        }
+
+        let uploadToken;
+        try {
+          const tokenResult = await msalInstance.acquireTokenSilent({
+            scopes: [AUTH_CONFIG.apiScope],
+            account: currentAccount
+          });
+          uploadToken = tokenResult.accessToken;
+        } catch (error) {
+          if (error instanceof InteractionRequiredAuthError ||
+              error?.errorCode === 'interaction_required' ||
+              error?.errorCode === 'consent_required') {
+            const tokenResult = await msalInstance.acquireTokenPopup({
+              scopes: [AUTH_CONFIG.apiScope],
+              account: currentAccount
+            });
+            uploadToken = tokenResult.accessToken;
+          } else {
+            throw error;
+          }
+        }
+
+        const response = await fetch(`${AUTH_CONFIG.apiBaseUrl}/api/reports`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${uploadToken}`,
+            'Content-Type': 'application/pdf',
+            'X-File-Name': encodeURIComponent(file.name)
+          },
+          body: file,
+          cache: 'no-store'
+        });
+
+        let result = {};
+        try { result = await response.json(); } catch { /* use a safe generic message */ }
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('A munkamenet lejárt vagy az API nem fogadta el a bejelentkezést. Frissítsd az oldalt, majd próbáld újra.');
+          }
+          throw new Error(result.message || 'A feltöltés nem sikerült. Próbáld újra később.');
+        }
+        if (result.uploaded !== true || !result.report?.reportId) {
+          throw new Error('A szerver válasza nem igazolta a feltöltés sikerét.');
+        }
+        return result;
+      }
+    };
+
     const redirectResult = await msalInstance.handleRedirectPromise();
     if (redirectResult?.account) {
       msalInstance.setActiveAccount(redirectResult.account);
