@@ -7,3 +7,4 @@ require('./functions/db-check');
 require('./functions/rls-test');
 require('./functions/upload-report');
 require('./functions/list-reports');
+require('./functions/delete-report');

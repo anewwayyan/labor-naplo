@@ -48,6 +48,7 @@ app.http('listReports', {
           FROM dbo.LabReports
           WHERE TenantId = @tenantId
             AND OwnerUserId = @ownerUserId
+            AND Status <> N'DeletePending'
           ORDER BY CreatedAt DESC;
         `);
       });
