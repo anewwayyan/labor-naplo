@@ -10,6 +10,8 @@ window.LABORNAPLO_AUTH_CONFIG = {
   tenantSubdomain: 'labornaplo',
   redirectUri: 'https://gray-hill-07110e210.4.azurestaticapps.net/',
   postLogoutRedirectUri: 'https://gray-hill-07110e210.4.azurestaticapps.net/',
+  // Standalone Azure Functions API base URL.
+  apiBaseUrl: 'https://labor-naplo-api-hcd4h0cvbsbyekg0.northeurope-01.azurewebsites.net',
   // Delegated scope exposed by LaborNaplo-API.
   apiScope: 'api://6ec0ba97-551c-4efc-8e4f-88128c2048c0/access_as_user',
   protectedApiEndpoint: '/api/me'

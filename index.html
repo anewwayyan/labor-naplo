@@ -54,7 +54,7 @@
           </div>
 
           <section class="card upload-card" id="upload-area">
-            <div class="upload-card-head"><div><h2>Új laborlelet</h2><div class="small-muted">Kezdd a dokumentum kiválasztásával.</div></div><span class="prototype-tag">PROTOTÍPUS</span></div>
+            <div class="upload-card-head"><div><h2>Új laborlelet</h2><div class="small-muted">Kezdd a dokumentum kiválasztásával.</div></div><span class="prototype-tag">BIZTONSÁGOS FELTÖLTÉS</span></div>
             <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Laborlelet kiválasztása">
               <div class="upload-icon">↑</div>
               <strong>Húzd ide a laborleletedet</strong>
@@ -64,9 +64,9 @@
             </div>
             <div class="selected-file" id="selectedFile">
               <div class="file-info"><div class="file-badge">▤</div><div><div class="file-name" id="fileName"></div><div class="file-size" id="fileSize"></div></div></div>
-              <button class="remove-file" id="removeFile" aria-label="Fájl eltávolítása">×</button>
+              <div class="selected-file-actions"><button type="button" class="primary-btn upload-submit-btn" id="uploadFile" disabled>Feltöltés</button><button type="button" class="remove-file" id="removeFile" aria-label="Fájl eltávolítása">×</button></div>
             </div>
-            <div class="notice"><span>ⓘ</span><div><b>Adatvédelem:</b> ez jelenleg egy felületi prototípus. A kiválasztott fájl nem kerül feltöltésre és nem hagyja el az eszközödet. A valódi, titkosított feltöltést az Azure-háttér bekötésekor készítjük el.</div></div>
+            <div class="notice"><span>ⓘ</span><div><b>Adatvédelem:</b> a PDF-et a bejelentkezésed ellenőrzése után biztonságos kapcsolaton küldjük az Azure privát dokumentumtárába. A dokumentumhoz csak a jogosult fiók férhet hozzá.</div></div>
           </section>
 
           <div class="section-head"><h2>Legutóbbi eredményeid</h2><span class="small-muted">Még nincs adat</span></div>
