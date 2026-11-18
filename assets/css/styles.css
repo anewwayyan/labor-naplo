@@ -90,6 +90,9 @@
     .selected-file { display: none; margin-top: 14px; border: 1px solid var(--line); background: white; padding: 12px 14px; border-radius: 12px; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
     .selected-file.visible { display: flex; }
     .file-info { min-width: 0; display: flex; gap: 10px; align-items: center; }
+    .selected-file-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .upload-submit-btn { padding: 9px 13px; font-size: 12px; white-space: nowrap; }
+    .upload-submit-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
     .file-badge { width: 35px; height: 35px; display: grid; place-items: center; background: #f0f3ff; border-radius: 10px; color: #596bb0; }
     .file-name { font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
     .file-size { color: var(--muted); font-size: 11px; }
