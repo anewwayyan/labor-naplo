@@ -46,6 +46,7 @@ jobs:
           node --check src/functions/upload-report.js
           node --check src/functions/list-reports.js
           node --check src/functions/delete-report.js
+          node --check src/functions/get-report-pdf.js
           node --check src/lib/auth.js
           node --check src/lib/database.js
 
