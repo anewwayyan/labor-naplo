@@ -25,6 +25,7 @@ const pages = ['home', 'results', 'documents', 'profile'];
     const selectedFile = document.getElementById('selectedFile');
     const fileName = document.getElementById('fileName');
     const fileSize = document.getElementById('fileSize');
+    const uploadButton = document.getElementById('uploadFile');
 
     function formatBytes(bytes) {
       if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -47,7 +48,8 @@ const pages = ['home', 'results', 'documents', 'profile'];
       fileName.textContent = file.name;
       fileSize.textContent = formatBytes(file.size);
       selectedFile.classList.add('visible');
-      showToast('A fájl kiválasztva. Ez a prototípus még nem tölti fel.');
+      uploadButton.disabled = false;
+      showToast('A PDF kiválasztva. Feltöltésre kész.');
     }
 
     document.getElementById('topUpload').addEventListener('click', () => {
@@ -65,6 +67,7 @@ const pages = ['home', 'results', 'documents', 'profile'];
     fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
     document.getElementById('removeFile').addEventListener('click', () => {
       fileInput.value = '';
+      uploadButton.disabled = true;
       selectedFile.classList.remove('visible');
       showToast('A kiválasztott fájl eltávolítva.');
     });
@@ -76,3 +79,31 @@ const pages = ['home', 'results', 'documents', 'profile'];
       event.preventDefault(); dropzone.classList.remove('dragover');
     }));
     dropzone.addEventListener('drop', event => handleFile(event.dataTransfer.files[0]));
+
+    uploadButton.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        showToast('Előbb válassz ki egy PDF-fájlt.');
+        return;
+      }
+      if (!window.LABORNAPLO_AUTH?.uploadPdf) {
+        showToast('A biztonságos feltöltés még nem érhető el. Frissítsd az oldalt.');
+        return;
+      }
+
+      uploadButton.disabled = true;
+      uploadButton.textContent = 'Feltöltés…';
+      try {
+        const result = await window.LABORNAPLO_AUTH.uploadPdf(file);
+        const uploadedName = result.report.originalFileName || file.name;
+        fileInput.value = '';
+        selectedFile.classList.remove('visible');
+        showToast(`Sikeres feltöltés: ${uploadedName}`);
+      } catch (error) {
+        console.error('[LaborNapló upload]', error);
+        showToast(error?.message || 'A feltöltés nem sikerült. Próbáld újra.');
+        uploadButton.disabled = false;
+      } finally {
+        uploadButton.textContent = 'Feltöltés';
+      }
+    });
