@@ -36,6 +36,12 @@ const reportsError = document.getElementById('reportsError');
 const reportsCount = document.getElementById('reportsCount');
 let reportsLoaded = false;
 let reportsLoadingNow = false;
+let activePdfObjectUrl = null;
+const pdfPreview = document.getElementById('pdfPreview');
+const pdfPreviewFrame = document.getElementById('pdfPreviewFrame');
+const pdfPreviewTitle = document.getElementById('pdfPreviewTitle');
+const pdfPreviewError = document.getElementById('pdfPreviewError');
+const pdfPreviewLoading = document.getElementById('pdfPreviewLoading');
 
 function formatBytes(bytes) {
   const size = Number(bytes) || 0;
@@ -95,6 +101,52 @@ async function deleteReport(reportId, button) {
   }
 }
 
+function closePdfPreview() {
+  pdfPreview.hidden = true;
+  pdfPreviewFrame.removeAttribute('src');
+  if (activePdfObjectUrl) {
+    URL.revokeObjectURL(activePdfObjectUrl);
+    activePdfObjectUrl = null;
+  }
+  pdfPreviewError.hidden = true;
+  pdfPreviewLoading.hidden = true;
+  document.body.classList.remove('pdf-preview-open');
+}
+
+async function openPdfPreview(report, button) {
+  if (!window.LABORNAPLO_AUTH?.getReportPdf) {
+    showToast('A PDF-megjelenítés még nem érhető el. Frissítsd az oldalt később.');
+    return;
+  }
+
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = 'Megnyitás…';
+  pdfPreview.hidden = false;
+  pdfPreviewTitle.textContent = report.originalFileName || 'Laborlelet.pdf';
+  pdfPreviewLoading.hidden = false;
+  pdfPreviewError.hidden = true;
+  document.body.classList.add('pdf-preview-open');
+
+  try {
+    const pdfBlob = await window.LABORNAPLO_AUTH.getReportPdf(report.reportId);
+    if (pdfPreview.hidden) return;
+    if (activePdfObjectUrl) URL.revokeObjectURL(activePdfObjectUrl);
+    activePdfObjectUrl = URL.createObjectURL(pdfBlob);
+    // Keep the browser's built-in PDF controls available for page navigation
+    // and zoom. The temporary object URL is revoked when the viewer closes.
+    pdfPreviewFrame.src = activePdfObjectUrl;
+  } catch (error) {
+    console.error('[LaborNapló PDF preview]', error);
+    pdfPreviewError.textContent = error?.message || 'A PDF megnyitása nem sikerült.';
+    pdfPreviewError.hidden = false;
+  } finally {
+    pdfPreviewLoading.hidden = true;
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
 function renderReports(reports) {
   reportsList.replaceChildren();
   reportsCount.textContent = `${reports.length} ${reports.length === 1 ? 'lelet' : 'lelet'}`;
@@ -133,12 +185,19 @@ function renderReports(reports) {
     status.textContent = statusText(report.status);
 
     const deleteButton = document.createElement('button');
+    const previewButton = document.createElement('button');
+    previewButton.type = 'button';
+    previewButton.className = 'report-preview-btn';
+    previewButton.textContent = 'PDF megtekintése';
+    previewButton.setAttribute('aria-label', `PDF megtekintése: ${report.originalFileName || 'Névtelen lelet'}`);
+    previewButton.addEventListener('click', () => openPdfPreview(report, previewButton));
+
     deleteButton.type = 'button';
     deleteButton.className = 'report-delete-btn';
     deleteButton.textContent = 'Törlés';
     deleteButton.setAttribute('aria-label', `Lelet törlése: ${report.originalFileName || 'Névtelen lelet'}`);
     deleteButton.addEventListener('click', () => deleteReport(report.reportId, deleteButton));
-    actions.append(status, deleteButton);
+    actions.append(status, previewButton, deleteButton);
     header.append(file, actions);
 
     const details = document.createElement('div');
@@ -264,4 +323,19 @@ uploadButton.addEventListener('click', async () => {
   } finally {
     uploadButton.textContent = 'Feltöltés';
   }
+});
+
+
+document.getElementById('pdfPreviewClose').addEventListener('click', closePdfPreview);
+document.getElementById('pdfPreviewBackdrop').addEventListener('click', closePdfPreview);
+document.getElementById('pdfPreviewFullscreen').addEventListener('click', async () => {
+  try {
+    if (!document.fullscreenElement) await pdfPreview.requestFullscreen();
+    else await document.exitFullscreen();
+  } catch (error) {
+    showToast('A teljes képernyős mód nem érhető el ebben a böngészőben.');
+  }
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !pdfPreview.hidden && !document.fullscreenElement) closePdfPreview();
 });
