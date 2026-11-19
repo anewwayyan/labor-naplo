@@ -91,17 +91,27 @@
         </section>
 
         <section class="page" id="page-profile">
-          <div class="header-row"><div><div class="eyebrow">Személyre szabás</div><h1>Saját adataim</h1><p class="subheading">Később itt adhatod meg az értelmezéshez fontos háttérinformációkat.</p></div></div>
-          <div class="card content-card">
-            <h2>Személyes profil</h2>
-            <p class="small-muted">A profil kitöltése nem lesz kötelező az alkalmazás használatához.</p>
-            <div class="profile-grid">
-              <div class="profile-field"><span>Alapadatok</span><strong>Életkor, nem, alapadatok</strong></div>
-              <div class="profile-field"><span>Egészségügyi előzmények</span><strong>Általad megadott állapotok</strong></div>
-              <div class="profile-field"><span>Gyógyszerek</span><strong>Rendszeresen szedett készítmények</strong></div>
-              <div class="profile-field"><span>Adatvédelem</span><strong>Adatok exportálása és törlése</strong></div>
+          <div class="header-row"><div><div class="eyebrow">Személyre szabás</div><h1>Saját adataim</h1><p class="subheading">Ezeket az adatokat bármikor módosíthatod. A profil kitöltése nem kötelező.</p></div></div>
+          <form class="card content-card profile-form" id="profileForm" novalidate>
+            <div class="profile-section-head"><div><h2>Alapadatok</h2><p class="small-muted">A megszólítás a főoldali köszöntésben jelenik meg.</p></div></div>
+            <div class="profile-input-grid">
+              <label class="profile-input"><span>Keresztnév</span><input id="profileFirstName" name="firstName" type="text" maxlength="100" autocomplete="given-name" placeholder="Pl. Tamás"></label>
+              <label class="profile-input"><span>Hogyan szólíthatunk?</span><input id="profilePreferredName" name="preferredName" type="text" maxlength="100" placeholder="Pl. Tomi"></label>
+              <label class="profile-input"><span>Születési dátum</span><input id="profileDateOfBirth" name="dateOfBirth" type="date" autocomplete="bday"></label>
+              <label class="profile-input"><span>Nem</span><select id="profileSex" name="sex"><option value="">Nincs megadva</option><option value="female">Nő</option><option value="male">Férfi</option><option value="other">Egyéb</option><option value="prefer_not_to_say">Nem szeretném megadni</option></select></label>
             </div>
-            <div class="notice"><span>ⓘ</span><div>Ezeket a funkciókat később építjük be. Egészségügyi adatot ebben a prototípusban még ne adj meg.</div></div>
+            <label class="profile-toggle" for="profileGreetingEnabled">
+              <span><strong>Főoldali köszöntés</strong><small>Jelenjen meg személyes üdvözlés a főoldalon.</small></span>
+              <input id="profileGreetingEnabled" name="greetingEnabled" type="checkbox" checked>
+            </label>
+            <div class="profile-actions">
+              <p class="profile-status" id="profileStatus" role="status" aria-live="polite">A profilod betöltése…</p>
+              <button class="primary-btn" id="saveProfileButton" type="submit" disabled>Mentés</button>
+            </div>
+          </form>
+          <div class="card content-card profile-coming">
+            <h2>További egészségügyi adatok</h2>
+            <p class="small-muted">Az egészségügyi előzmények, gyógyszerek és allergiák rögzítése külön fejlesztési lépésben érkezik. Ezeket a részeket addig nem lehet szerkeszteni.</p>
           </div>
         </section>
       </main>
