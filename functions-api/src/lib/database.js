@@ -34,7 +34,7 @@ function getSafeErrorDetails(error) {
 
 function logDatabaseError(stage, error) {
   // Do not log access tokens, credentials, or connection configuration.
-  console.error(`LaborNapló SQL ${stage}:`, JSON.stringify(getSafeErrorDetails(error)));
+  console.error(`Leletke SQL ${stage}:`, JSON.stringify(getSafeErrorDetails(error)));
 }
 
 function createPoolConfig() {

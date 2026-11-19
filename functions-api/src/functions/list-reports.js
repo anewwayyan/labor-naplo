@@ -86,16 +86,16 @@ app.http('listReports', {
       }
 
       if (error instanceof AuthConfigurationError || error?.code === 'AUTH_CONFIGURATION_ERROR') {
-        context.error('LaborNapló report-list authentication configuration error.');
+        context.error('Leletke report-list authentication configuration error.');
         return errorResponse(503, 'authentication_not_configured', 'A biztonságos API-hitelesítés beállítása még nem teljes.');
       }
 
       if (error instanceof DatabaseConfigurationError || error?.code === 'DATABASE_CONFIGURATION_ERROR') {
-        context.error('LaborNapló report-list database configuration error.');
+        context.error('Leletke report-list database configuration error.');
         return errorResponse(503, 'database_not_configured', 'Az adatbázis-kapcsolat beállítása még nem teljes.');
       }
 
-      context.error('LaborNapló report list failed:', error?.code || error?.name || 'UNKNOWN');
+      context.error('Leletke report list failed:', error?.code || error?.name || 'UNKNOWN');
       return errorResponse(503, 'reports_unavailable', 'A leletek listája jelenleg nem érhető el. Próbáld újra később.');
     }
   }

@@ -42,7 +42,7 @@ app.http('me', {
       }
 
       if (error instanceof AuthConfigurationError || error?.code === 'AUTH_CONFIGURATION_ERROR') {
-        context.error('LaborNapló API authentication configuration error:', error.message);
+        context.error('Leletke API authentication configuration error:', error.message);
         return {
           status: 503,
           headers: { 'Cache-Control': 'no-store' },
@@ -53,7 +53,7 @@ app.http('me', {
         };
       }
 
-      context.error('Unexpected error while validating LaborNapló API authentication.');
+      context.error('Unexpected error while validating Leletke API authentication.');
       return {
         status: 503,
         headers: { 'Cache-Control': 'no-store' },

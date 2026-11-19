@@ -2,7 +2,7 @@
   "name": "labornaplo-functions-api",
   "version": "0.2.0",
   "private": true,
-  "description": "Standalone Azure Functions API for LaborNapló",
+  "description": "Standalone Azure Functions API for Leletke",
   "main": "src/index.js",
   "engines": {
     "node": "22.x"

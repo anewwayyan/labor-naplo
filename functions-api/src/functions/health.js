@@ -7,7 +7,7 @@ app.http('health', {
   authLevel: 'anonymous',
   route: 'health',
   handler: async (request, context) => {
-    context.log('LaborNapló standalone API health check requested.');
+    context.log('Leletke standalone API health check requested.');
 
     return {
       status: 200,

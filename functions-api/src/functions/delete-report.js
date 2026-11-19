@@ -145,7 +145,7 @@ app.http('deleteReport', {
                 `);
             });
           } catch (restoreError) {
-            context.error('LaborNapló delete status restore failed:', restoreError?.code || restoreError?.name || 'UNKNOWN');
+            context.error('Leletke delete status restore failed:', restoreError?.code || restoreError?.name || 'UNKNOWN');
           }
         }
 
@@ -170,21 +170,21 @@ app.http('deleteReport', {
       }
 
       if (error instanceof AuthConfigurationError || error?.code === 'AUTH_CONFIGURATION_ERROR') {
-        context.error('LaborNapló report-delete authentication configuration error.');
+        context.error('Leletke report-delete authentication configuration error.');
         return errorResponse(503, 'authentication_not_configured', 'A biztonságos API-hitelesítés beállítása még nem teljes.');
       }
 
       if (error instanceof DatabaseConfigurationError || error?.code === 'DATABASE_CONFIGURATION_ERROR') {
-        context.error('LaborNapló report-delete database configuration error.');
+        context.error('Leletke report-delete database configuration error.');
         return errorResponse(503, 'database_not_configured', 'Az adatbázis-kapcsolat beállítása még nem teljes.');
       }
 
       if (error instanceof StorageConfigurationError || error?.code === 'STORAGE_CONFIGURATION_ERROR') {
-        context.error('LaborNapló report-delete storage configuration error.');
+        context.error('Leletke report-delete storage configuration error.');
         return errorResponse(503, 'storage_not_configured', 'A biztonságos fájltároló jelenleg nem érhető el.');
       }
 
-      context.error('LaborNapló PDF delete failed:', error?.code || error?.name || 'UNKNOWN');
+      context.error('Leletke PDF delete failed:', error?.code || error?.name || 'UNKNOWN');
       return errorResponse(503, 'delete_unavailable', 'A lelet törlése most nem sikerült. A leletet nem távolítottuk el a listádból; próbáld újra később.');
     }
   }
