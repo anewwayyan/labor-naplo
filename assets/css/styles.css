@@ -96,7 +96,14 @@
     .file-badge { width: 35px; height: 35px; display: grid; place-items: center; background: #f0f3ff; border-radius: 10px; color: #596bb0; }
     .file-name { font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
     .file-size { color: var(--muted); font-size: 11px; }
-    .remove-file { border: 0; background: transparent; color: var(--muted); font-size: 20px; padding: 4px 8px; }
+    .remove-file {
+      width: 42px;
+      height: 36px;
+      flex: 0 0 42px;
+      padding: 0;
+      font-size: 20px;
+      line-height: 1;
+    }
     .notice { display: flex; gap: 9px; align-items: flex-start; background: #f7f9f8; border: 1px solid var(--line); padding: 11px 13px; border-radius: 12px; color: #697872; font-size: 11px; margin-top: 15px; }
     .notice b { color: #465750; }
     .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 27px 0 13px; }
