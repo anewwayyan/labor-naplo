@@ -221,7 +221,23 @@ console.log('LaborNapló token fejléc:', {
         console.warn('[LaborNapló RLS test] A teszthívás nem sikerült:', rlsError?.message || rlsError);
       }
 
+      window.laborNaploApiRequest = async (url, options = {}) => {
+        const freshToken = await msalInstance.acquireTokenSilent({
+          scopes: [AUTH_CONFIG.apiScope],
+          account: currentAccount
+        });
+        const headers = new Headers(options.headers || {});
+        headers.set('X-LaborNaplo-Authorization', `Bearer ${freshToken.accessToken}`);
+        if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+        return fetch(url, {
+          ...options,
+          headers,
+          cache: 'no-store',
+          credentials: 'same-origin'
+        });
+      };
       showSignedIn(currentAccount);
+      window.dispatchEvent(new CustomEvent('labor-naplo-authenticated'));
     }
 
     if (account) {
