@@ -26,6 +26,19 @@ function clearAuthError() {
   authError.hidden = true;
 }
 
+// Log only non-sensitive MSAL diagnostics. Never log tokens, authorization
+// codes, account identifiers, email addresses, or complete redirect URLs.
+function logAuthDiagnostic(phase, error = null, details = {}) {
+  const diagnostic = { phase, ...details };
+  if (error) {
+    diagnostic.errorName = error.name || null;
+    diagnostic.errorCode = error.errorCode || null;
+    diagnostic.subError = error.subError || null;
+    diagnostic.correlationId = error.correlationId || null;
+  }
+  console.info('[Leletke auth diagnostic]', diagnostic);
+}
+
 function isConfigured() {
   return Boolean(
     AUTH_CONFIG.clientId &&
@@ -102,7 +115,9 @@ async function startAuthentication() {
       }
     });
 
+    logAuthDiagnostic('msal-initialize-start');
     await msalInstance.initialize();
+    logAuthDiagnostic('msal-initialize-complete');
 
     // Expose only the authenticated PDF upload operation to the frontend UI.
     // The API independently validates the Entra access token before accepting data.
@@ -327,44 +342,89 @@ async function startAuthentication() {
       }
     };
 
-    const redirectResult = await msalInstance.handleRedirectPromise();
-    if (redirectResult?.account) {
-      msalInstance.setActiveAccount(redirectResult.account);
+    logAuthDiagnostic('redirect-processing-start');
+    let redirectResult;
+    try {
+      redirectResult = await msalInstance.handleRedirectPromise();
+      logAuthDiagnostic('redirect-processing-complete', null, {
+        redirectAccountReturned: Boolean(redirectResult?.account),
+        redirectErrorReturned: Boolean(redirectResult?.error)
+      });
+    } catch (error) {
+      logAuthDiagnostic('redirect-processing-failed', error);
+      throw error;
     }
 
-    let account = msalInstance.getActiveAccount();
-    if (!account) {
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts.length === 1) {
-        account = accounts[0];
+    if (redirectResult?.account) {
+      msalInstance.setActiveAccount(redirectResult.account);
+      logAuthDiagnostic('active-account-set-from-redirect');
+    }
+
+    const cachedAccounts = msalInstance.getAllAccounts();
+    const currentActiveAccount = msalInstance.getActiveAccount();
+    let account = null;
+
+    if (currentActiveAccount) {
+      account = cachedAccounts.find(cached =>
+        cached.homeAccountId === currentActiveAccount.homeAccountId
+      ) || null;
+      if (account) {
         msalInstance.setActiveAccount(account);
+        logAuthDiagnostic('active-account-restored-from-cache');
+      } else {
+        msalInstance.setActiveAccount(null);
+        logAuthDiagnostic('stale-active-account-cleared');
       }
     }
 
+    if (!account && redirectResult?.account) {
+      account = redirectResult.account;
+      msalInstance.setActiveAccount(account);
+    }
+
+    if (!account && cachedAccounts.length === 1) {
+      account = cachedAccounts[0];
+      msalInstance.setActiveAccount(account);
+      logAuthDiagnostic('single-cached-account-selected');
+    }
+
+    if (!account && cachedAccounts.length > 1) {
+      logAuthDiagnostic('multiple-cached-accounts-no-active-selection', null, {
+        cachedAccountCount: cachedAccounts.length
+      });
+      throw new Error('Több mentett Microsoft-fiók található. Jelentkezz ki, majd válaszd ki újra a használni kívánt fiókot.');
+    }
+
+    logAuthDiagnostic('account-resolution-complete', null, {
+      accountAvailable: Boolean(account),
+      cachedAccountCount: cachedAccounts.length
+    });
+
     async function verifyApiAccess(currentAccount) {
-      console.log('[Leletke] verifyApiAccess elindult');
+      logAuthDiagnostic('api-access-verification-start');
       let tokenResponse;
       try {
         tokenResponse = await msalInstance.acquireTokenSilent({
           scopes: [AUTH_CONFIG.apiScope],
           account: currentAccount
         });
-        console.log('[Leletke] Token megszerzése sikerült:', {
-  hasAccessToken: Boolean(tokenResponse?.accessToken),
-  expiresOn: tokenResponse?.expiresOn
-});
+        logAuthDiagnostic('silent-api-token-acquired', null, {
+          accessTokenAvailable: Boolean(tokenResponse?.accessToken)
+        });
       } catch (error) {
         if (error instanceof InteractionRequiredAuthError ||
             error?.errorCode === 'interaction_required' ||
             error?.errorCode === 'consent_required') {
           // This redirect is only needed the first time the SPA obtains the
           // API-specific permission, or after the Microsoft session expires.
+          logAuthDiagnostic('interactive-api-token-required', error);
           await msalInstance.acquireTokenRedirect({
             scopes: [AUTH_CONFIG.apiScope],
             account: currentAccount
           });
           return;
         }
+        logAuthDiagnostic('silent-api-token-acquisition-failed', error);
         throw error;
       }
 const parts = tokenResponse.accessToken.split('.');
@@ -382,6 +442,7 @@ console.log('Leletke token fejléc:', {
   kid: tokenHeader.kid || null,
   typ: tokenHeader.typ || null
 });
+      logAuthDiagnostic('protected-api-request-start');
       const response = await fetch(AUTH_CONFIG.protectedApiEndpoint || '/api/me', {
         method: 'GET',
         headers: {
@@ -390,6 +451,11 @@ console.log('Leletke token fejléc:', {
         },
         cache: 'no-store',
         credentials: 'same-origin'
+      });
+
+      logAuthDiagnostic('protected-api-response', null, {
+        status: response.status,
+        ok: response.ok
       });
 
       if (response.status === 401) {
@@ -423,6 +489,7 @@ console.log('Leletke token fejléc:', {
       }
 
       showSignedIn(currentAccount);
+      logAuthDiagnostic('authentication-complete');
     }
 
     if (account) {
@@ -436,9 +503,11 @@ console.log('Leletke token fejléc:', {
       loginButton.disabled = true;
       loginButton.textContent = 'Átirányítás…';
       try {
+        // Do not force a fresh credential prompt on every attempt. Entra
+        // can reuse its existing session and only request OTP when necessary.
+        logAuthDiagnostic('login-redirect-start');
         await msalInstance.loginRedirect({
-          scopes: [AUTH_CONFIG.apiScope],
-          prompt: 'login'
+          scopes: [AUTH_CONFIG.apiScope]
         });
       } catch (error) {
         console.error('[Leletke auth] Login failed:', error);
@@ -465,6 +534,7 @@ console.log('Leletke token fejléc:', {
       }
     });
   } catch (error) {
+    logAuthDiagnostic('authentication-initialization-or-verification-failed', error);
     console.error('[Leletke auth] Initialization or API verification failed:', error);
     showSignedOut();
     showAuthError(error?.message || 'A bejelentkezés vagy a biztonságos API-ellenőrzés nem sikerült. Frissítsd az oldalt, és ellenőrizd az Entra-beállításokat.');
