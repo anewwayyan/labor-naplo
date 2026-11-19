@@ -1,4 +1,4 @@
-# LaborNapló – OTP bejelentkezés telepítése
+# Leletke – OTP bejelentkezés telepítése
 
 A csomag csak a módosítandó / hozzáadandó frontendfájlokat tartalmazza. A meglévő `assets/css/styles.css`, `assets/js/app.js`, `api/` és `.github/workflows/` fájlokat nem kell felülírni.
 
