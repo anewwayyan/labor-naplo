@@ -12,5 +12,7 @@ window.LABORNAPLO_AUTH_CONFIG = {
   postLogoutRedirectUri: 'https://gray-hill-07110e210-1.centralus.4.azurestaticapps.net/',
   // Delegated scope exposed by LaborNaplo-API.
   apiScope: 'api://6ec0ba97-551c-4efc-8e4f-88128c2048c0/access_as_user',
+  // Separate Azure Functions app hosting profile, medication and allergy endpoints.
+  apiBaseUrl: 'https://labor-naplo-api-hcd4h0cvbsbyekg0.northeurope-01.azurewebsites.net',
   protectedApiEndpoint: '/api/me'
 };

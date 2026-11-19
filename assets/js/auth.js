@@ -229,11 +229,12 @@ console.log('LaborNapló token fejléc:', {
         const headers = new Headers(options.headers || {});
         headers.set('X-LaborNaplo-Authorization', `Bearer ${freshToken.accessToken}`);
         if (!headers.has('Accept')) headers.set('Accept', 'application/json');
-        return fetch(url, {
+        const apiUrl = new URL(url, AUTH_CONFIG.apiBaseUrl).toString();
+        return fetch(apiUrl, {
           ...options,
           headers,
           cache: 'no-store',
-          credentials: 'same-origin'
+          credentials: 'omit'
         });
       };
       async function listHealthRecords(path) {
