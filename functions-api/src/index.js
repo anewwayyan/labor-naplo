@@ -4,6 +4,7 @@
 require('./functions/health');
 require('./functions/me');
 require('./functions/profile');
+require('./functions/health-records');
 require('./functions/db-check');
 require('./functions/rls-test');
 require('./functions/upload-report');
