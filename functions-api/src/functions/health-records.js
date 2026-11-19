@@ -110,12 +110,12 @@ function registerCollection(config) {
   app.http('list' + config.name, {
     methods: ['GET'], authLevel: 'anonymous', route: config.route,
     handler: async (request, context) => run(request, context, async ({ sql, transaction }) => {
-      const result = await new sql.Request(transaction).query(\`
+      const result = await new sql.Request(transaction).query(`
         SELECT ${idColumn} AS id, ${selectColumns},
                CreatedAt AS createdAt, UpdatedAt AS updatedAt
         FROM dbo.${config.table}
         ORDER BY ${config.orderBy};
-      \`);
+      `);
       return response(200, null, { items: result.recordset || [] });
     })
   });
@@ -124,12 +124,12 @@ function registerCollection(config) {
     methods: ['GET'], authLevel: 'anonymous', route: config.route + '/{id}',
     handler: async (request, context) => run(request, context, async ({ sql, transaction }) => {
       const id = normalizeGuid(request.params.id);
-      const result = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(\`
+      const result = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(`
         SELECT ${idColumn} AS id, ${selectColumns},
                CreatedAt AS createdAt, UpdatedAt AS updatedAt
         FROM dbo.${config.table}
         WHERE ${idColumn} = @id;
-      \`);
+      `);
       const item = result.recordset?.[0];
       return item ? response(200, null, { item }) : response(404, 'not_found', 'A keresett rekord nem található.');
     })
@@ -146,12 +146,12 @@ function registerCollection(config) {
       await new sql.Request(transaction)
         .input('tenantId', sql.UniqueIdentifier, user.tenantId)
         .input('ownerUserId', sql.UniqueIdentifier, user.userId)
-        .query(\`
+        .query(`
           IF NOT EXISTS (SELECT 1 FROM dbo.UserProfiles WHERE TenantId = @tenantId AND OwnerUserId = @ownerUserId)
           BEGIN
             INSERT INTO dbo.UserProfiles (TenantId, OwnerUserId) VALUES (@tenantId, @ownerUserId);
           END;
-        \`);
+        `);
 
       const insertRequest = new sql.Request(transaction)
         .input('tenantId', sql.UniqueIdentifier, user.tenantId)
@@ -165,17 +165,17 @@ function registerCollection(config) {
         parameters.push('@' + key);
       }
 
-      const inserted = await insertRequest.query(\`
+      const inserted = await insertRequest.query(`
         INSERT INTO dbo.${config.table} (${columns.join(', ')})
         OUTPUT INSERTED.${idColumn} AS id
         VALUES (${parameters.join(', ')});
-      \`);
+      `);
       const id = inserted.recordset?.[0]?.id;
-      const saved = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(\`
+      const saved = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(`
         SELECT ${idColumn} AS id, ${selectColumns},
                CreatedAt AS createdAt, UpdatedAt AS updatedAt
         FROM dbo.${config.table} WHERE ${idColumn} = @id;
-      \`);
+      `);
       return response(201, null, { created: true, item: saved.recordset?.[0] || null });
     })
   });
@@ -195,19 +195,19 @@ function registerCollection(config) {
         assignments.push(field.column + ' = @' + key);
       }
       assignments.push('UpdatedAt = SYSUTCDATETIME()');
-      const updated = await updateRequest.query(\`
+      const updated = await updateRequest.query(`
         UPDATE dbo.${config.table}
         SET ${assignments.join(', ')}
         OUTPUT INSERTED.${idColumn} AS id
         WHERE ${idColumn} = @id;
-      \`);
+      `);
       if (!updated.recordset?.length) return response(404, 'not_found', 'A keresett rekord nem található.');
 
-      const saved = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(\`
+      const saved = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(`
         SELECT ${idColumn} AS id, ${selectColumns},
                CreatedAt AS createdAt, UpdatedAt AS updatedAt
         FROM dbo.${config.table} WHERE ${idColumn} = @id;
-      \`);
+      `);
       return response(200, null, { updated: true, item: saved.recordset?.[0] || null });
     })
   });
@@ -216,11 +216,11 @@ function registerCollection(config) {
     methods: ['DELETE'], authLevel: 'anonymous', route: config.route + '/{id}',
     handler: async (request, context) => run(request, context, async ({ sql, transaction }) => {
       const id = normalizeGuid(request.params.id);
-      const deleted = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(\`
+      const deleted = await new sql.Request(transaction).input('id', sql.UniqueIdentifier, id).query(`
         DELETE FROM dbo.${config.table}
         OUTPUT DELETED.${idColumn} AS id
         WHERE ${idColumn} = @id;
-      \`);
+      `);
       return deleted.recordset?.length ? response(200, null, { deleted: true }) : response(404, 'not_found', 'A keresett rekord nem található.');
     })
   });
