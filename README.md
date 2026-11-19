@@ -1,6 +1,6 @@
-# LaborNapló
+# Leletke
 
-A LaborNapló statikus webes felülete Microsoft Entra External ID e-mailes egyszer használatos kódos (OTP) bejelentkezéssel, valamint Azure Functions API-val.
+A Leletke statikus webes felülete Microsoft Entra External ID e-mailes egyszer használatos kódos (OTP) bejelentkezéssel, valamint Azure Functions API-val.
 
 ## Projekt fő részei
 
