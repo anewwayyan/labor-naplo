@@ -65,3 +65,36 @@
 @media (max-width: 760px) {
   .auth-card { padding: 29px 22px; border-radius: 21px; }
 }
+
+
+/* Leletke sign-in: warm, calm and consistent with the app */
+.auth-screen {
+  background:
+    radial-gradient(ellipse at 12% 12%, rgba(220,232,210,.82), transparent 27rem),
+    radial-gradient(ellipse at 88% 85%, rgba(235,222,196,.55), transparent 25rem),
+    #f1f4ef;
+}
+.auth-card {
+  width: min(100%, 480px); padding: 42px 40px;
+  background: rgba(255,254,250,.97);
+  border: 1px solid #e3e7dc; border-radius: 27px;
+  box-shadow: 0 24px 70px rgba(36,58,45,.12);
+}
+.auth-brand { font-size: 21px; letter-spacing: -.8px; }
+.auth-icon {
+  width: 66px; height: 66px; border-radius: 21px;
+  background: linear-gradient(145deg, #e2eddd, #f1f1e5);
+  color: #28694f;
+}
+.auth-card h1 { font-size: 31px; letter-spacing: -1.35px; }
+.auth-description { line-height: 1.75; }
+.auth-login-btn { min-height: 49px; }
+.auth-setup-note {
+  background: #f7eddf; border-color: #ecdfc9; color: #825d35;
+  border-radius: 14px; line-height: 1.65;
+}
+.auth-security { border-top-color: #e8e9df; }
+@media (max-width: 760px) {
+  .auth-card { padding: 31px 23px; border-radius: 22px; }
+  .auth-card h1 { font-size: 27px; }
+}
