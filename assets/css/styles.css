@@ -747,3 +747,19 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
   border-color: #7f3744;
   box-shadow: 0 6px 14px rgba(127, 55, 68, .24);
 }
+
+
+/* Force the remove-file button to stay burgundy even with later primary button rules */
+#removeFile.primary-btn {
+  background: #984653 !important;
+  background-image: none !important;
+  border-color: #984653 !important;
+  box-shadow: 0 4px 10px rgba(152, 70, 83, .2) !important;
+}
+#removeFile.primary-btn:hover,
+#removeFile.primary-btn:focus-visible {
+  background: #7f3744 !important;
+  background-image: none !important;
+  border-color: #7f3744 !important;
+  box-shadow: 0 6px 14px rgba(127, 55, 68, .24) !important;
+}
