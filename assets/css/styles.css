@@ -667,3 +667,26 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
     animation-duration: 1.8s;
   }
 }
+
+
+/* Larger, more readable success and error notifications */
+.toast {
+  padding: 20px 28px;
+  min-width: min(360px, calc(100vw - 32px));
+  max-width: min(560px, calc(100vw - 32px));
+  border-radius: 18px;
+  font-size: 22px;
+  line-height: 1.45;
+  font-weight: 650;
+  text-align: center;
+  box-shadow: 0 14px 36px rgba(20, 45, 35, .22);
+}
+@media (max-width: 760px) {
+  .toast {
+    bottom: 18px;
+    min-width: 0;
+    width: calc(100vw - 32px);
+    padding: 18px 20px;
+    font-size: 19px;
+  }
+}
