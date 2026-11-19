@@ -306,6 +306,8 @@ uploadButton.addEventListener('click', async () => {
   }
 
   uploadButton.disabled = true;
+  uploadButton.classList.add('is-loading');
+  uploadButton.setAttribute('aria-busy', 'true');
   uploadButton.textContent = 'Feltöltés…';
   try {
     const result = await window.LABORNAPLO_AUTH.uploadPdf(file);
@@ -321,6 +323,8 @@ uploadButton.addEventListener('click', async () => {
     showToast(error?.message || 'A feltöltés nem sikerült. Próbáld újra.');
     uploadButton.disabled = !selectedPdfFile;
   } finally {
+    uploadButton.classList.remove('is-loading');
+    uploadButton.removeAttribute('aria-busy');
     uploadButton.textContent = 'Feltöltés';
   }
 });
