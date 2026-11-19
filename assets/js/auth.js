@@ -1,4 +1,4 @@
-/* LaborNapló sign-in and protected API check.
+/* Leletke sign-in and protected API check.
  * Microsoft Entra External ID handles the email OTP sign-in.
  * The SPA then requests an API-specific access token and calls /api/me.
  * The API independently validates the token signature and claims.
@@ -93,7 +93,7 @@ async function startAuthentication() {
         loggerOptions: {
           loggerCallback: (level, message, containsPii) => {
             if (!containsPii && level === LogLevel.Error) {
-              console.error('[LaborNapló auth]', message);
+              console.error('[Leletke auth]', message);
             }
           },
           piiLoggingEnabled: false,
@@ -342,14 +342,14 @@ async function startAuthentication() {
     }
 
     async function verifyApiAccess(currentAccount) {
-      console.log('[LaborNapló] verifyApiAccess elindult');
+      console.log('[Leletke] verifyApiAccess elindult');
       let tokenResponse;
       try {
         tokenResponse = await msalInstance.acquireTokenSilent({
           scopes: [AUTH_CONFIG.apiScope],
           account: currentAccount
         });
-        console.log('[LaborNapló] Token megszerzése sikerült:', {
+        console.log('[Leletke] Token megszerzése sikerült:', {
   hasAccessToken: Boolean(tokenResponse?.accessToken),
   expiresOn: tokenResponse?.expiresOn
 });
@@ -377,7 +377,7 @@ const paddedHeader = encodedHeader.padEnd(
 );
 const tokenHeader = JSON.parse(atob(paddedHeader));
 
-console.log('LaborNapló token fejléc:', {
+console.log('Leletke token fejléc:', {
   alg: tokenHeader.alg,
   kid: tokenHeader.kid || null,
   typ: tokenHeader.typ || null
@@ -400,7 +400,7 @@ console.log('LaborNapló token fejléc:', {
         const joseName = typeof rejection?.joseName === 'string' ? rejection.joseName : null;
         const algorithm = typeof rejection?.tokenAlgorithm === 'string' ? rejection.tokenAlgorithm : null;
         const hasKeyId = rejection?.tokenHasKeyId === true;
-        if (code) console.info('[LaborNapló API diagnostic]', {
+        if (code) console.info('[Leletke API diagnostic]', {
           diagnosticCode: code,
           joseCode,
           joseName,
@@ -441,7 +441,7 @@ console.log('LaborNapló token fejléc:', {
           prompt: 'login'
         });
       } catch (error) {
-        console.error('[LaborNapló auth] Login failed:', error);
+        console.error('[Leletke auth] Login failed:', error);
         showAuthError('A bejelentkezés most nem sikerült. Ellenőrizd az Entra-beállításokat, majd próbáld újra.');
         loginButton.disabled = false;
         loginButton.textContent = 'Belépés e-maillel';
@@ -459,13 +459,13 @@ console.log('LaborNapló token fejléc:', {
           postLogoutRedirectUri
         });
       } catch (error) {
-        console.error('[LaborNapló auth] Logout failed:', error);
+        console.error('[Leletke auth] Logout failed:', error);
         showAuthError('A kijelentkezés nem sikerült. Próbáld újra.');
         logoutButton.disabled = false;
       }
     });
   } catch (error) {
-    console.error('[LaborNapló auth] Initialization or API verification failed:', error);
+    console.error('[Leletke auth] Initialization or API verification failed:', error);
     showSignedOut();
     showAuthError(error?.message || 'A bejelentkezés vagy a biztonságos API-ellenőrzés nem sikerült. Frissítsd az oldalt, és ellenőrizd az Entra-beállításokat.');
     loginButton.disabled = false;
