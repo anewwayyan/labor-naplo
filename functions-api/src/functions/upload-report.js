@@ -228,7 +228,7 @@ app.http('uploadReport', {
         try {
           await uploadedBlobClient.deleteIfExists();
         } catch (cleanupError) {
-          context.error('LaborNapló upload cleanup failed:', cleanupError?.code || cleanupError?.name || 'UNKNOWN');
+          context.error('Leletke upload cleanup failed:', cleanupError?.code || cleanupError?.name || 'UNKNOWN');
         }
       }
 
@@ -247,21 +247,21 @@ app.http('uploadReport', {
       }
 
       if (error instanceof AuthConfigurationError || error?.code === 'AUTH_CONFIGURATION_ERROR') {
-        context.error('LaborNapló upload authentication configuration error.');
+        context.error('Leletke upload authentication configuration error.');
         return errorResponse(503, 'authentication_not_configured', 'A biztonságos API-hitelesítés beállítása még nem teljes.');
       }
 
       if (error instanceof DatabaseConfigurationError || error?.code === 'DATABASE_CONFIGURATION_ERROR') {
-        context.error('LaborNapló upload database configuration error.');
+        context.error('Leletke upload database configuration error.');
         return errorResponse(503, 'database_not_configured', 'Az adatbázis-kapcsolat beállítása még nem teljes.');
       }
 
       if (error instanceof StorageConfigurationError || error?.code === 'STORAGE_CONFIGURATION_ERROR') {
-        context.error('LaborNapló upload storage configuration error.');
+        context.error('Leletke upload storage configuration error.');
         return errorResponse(503, 'storage_not_configured', 'A fájltároló beállítása még nem teljes.');
       }
 
-      context.error('LaborNapló PDF upload failed:', error?.code || error?.name || 'UNKNOWN');
+      context.error('Leletke PDF upload failed:', error?.code || error?.name || 'UNKNOWN');
       return errorResponse(503, 'upload_unavailable', 'A feltöltés jelenleg nem sikerült. Kérjük, próbáld újra később.');
     }
   }
