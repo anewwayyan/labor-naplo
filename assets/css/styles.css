@@ -639,3 +639,31 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* Upload progress indicator */
+.upload-submit-btn.is-loading {
+  cursor: wait;
+  transform: none;
+}
+.upload-submit-btn.is-loading:hover {
+  transform: none;
+}
+.upload-submit-btn.is-loading::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  border: 2px solid rgba(255, 255, 255, .42);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: upload-spinner-spin .7s linear infinite;
+}
+@keyframes upload-spinner-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .upload-submit-btn.is-loading::before {
+    animation-duration: 1.8s;
+  }
+}
