@@ -1,0 +1,35 @@
+name: Validate Leletke API
+
+on:
+  pull_request:
+    branches:
+      - feature/profile-database-schema
+      - feature/azure-functions-api
+    paths:
+      - 'functions-api/**'
+      - '.github/workflows/validate-functions-api.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install API dependencies
+        working-directory: functions-api
+        run: npm install --omit=dev
+
+      - name: Check JavaScript syntax
+        working-directory: functions-api
+        run: |
+          node --check src/index.js
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
