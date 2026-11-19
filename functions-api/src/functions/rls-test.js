@@ -139,7 +139,7 @@ app.http('rlsTest', {
         error?.code === 'AUTH_CONFIGURATION_ERROR' ||
         error?.code === 'DATABASE_CONFIGURATION_ERROR'
       ) {
-        context.error('LaborNapló RLS test configuration error:', error?.code || error?.name);
+        context.error('Leletke RLS test configuration error:', error?.code || error?.name);
         return {
           status: 503,
           headers: { 'Cache-Control': 'no-store' },
@@ -147,7 +147,7 @@ app.http('rlsTest', {
         };
       }
 
-      context.error('LaborNapló RLS test failed:', error?.code || error?.name || 'UNKNOWN');
+      context.error('Leletke RLS test failed:', error?.code || error?.name || 'UNKNOWN');
       return {
         status: 503,
         headers: { 'Cache-Control': 'no-store' },
