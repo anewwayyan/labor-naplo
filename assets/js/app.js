@@ -94,7 +94,7 @@ async function deleteReport(reportId, button) {
     showToast('A lelet törlése sikerült.');
     await loadReports(true);
   } catch (error) {
-    console.error('[LaborNapló report delete]', error);
+    console.error('[Leletke report delete]', error);
     showToast(error?.message || 'A lelet törlése nem sikerült. Próbáld újra.');
     button.disabled = false;
     button.textContent = 'Törlés';
@@ -137,7 +137,7 @@ async function openPdfPreview(report, button) {
     // and zoom. The temporary object URL is revoked when the viewer closes.
     pdfPreviewFrame.src = activePdfObjectUrl;
   } catch (error) {
-    console.error('[LaborNapló PDF preview]', error);
+    console.error('[Leletke PDF preview]', error);
     pdfPreviewError.textContent = error?.message || 'A PDF megnyitása nem sikerült.';
     pdfPreviewError.hidden = false;
   } finally {
@@ -228,7 +228,7 @@ async function loadReports(force = false) {
     renderReports(reports);
     reportsLoaded = true;
   } catch (error) {
-    console.error('[LaborNapló reports]', error);
+    console.error('[Leletke reports]', error);
     reportsError.textContent = error?.message || 'A leletek betöltése nem sikerült.';
     reportsError.hidden = false;
   } finally {
@@ -317,7 +317,7 @@ uploadButton.addEventListener('click', async () => {
       await loadReports(true);
     }
   } catch (error) {
-    console.error('[LaborNapló upload]', error);
+    console.error('[Leletke upload]', error);
     showToast(error?.message || 'A feltöltés nem sikerült. Próbáld újra.');
     uploadButton.disabled = !selectedPdfFile;
   } finally {
