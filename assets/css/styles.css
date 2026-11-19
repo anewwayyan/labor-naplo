@@ -735,3 +735,15 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
   border-radius: 13px;
   box-shadow: 0 6px 15px rgba(35,107,86,.17);
 }
+
+/* Keep the file removal action burgundy in its default state */
+.primary-btn.remove-file {
+  background: #984653;
+  border-color: #984653;
+  box-shadow: 0 4px 10px rgba(152, 70, 83, .2);
+}
+.primary-btn.remove-file:hover {
+  background: #7f3744;
+  border-color: #7f3744;
+  box-shadow: 0 6px 14px rgba(127, 55, 68, .24);
+}
