@@ -1,4 +1,4 @@
-# LaborNapló – API tokenvédelem beállítása
+# Leletke – API tokenvédelem beállítása
 
 ## Entra alkalmazások
 
@@ -19,7 +19,7 @@ Ezek nem titkos értékek. Client secretet böngészőben futó SPA-hoz nem szab
 
 ## Backend környezeti változók
 
-Azure Portal → LaborNapló Static Web App → Settings → Environment variables → Production:
+Azure Portal → Leletke Static Web App → Settings → Environment variables → Production:
 
 | Name | Value |
 |---|---|
@@ -81,8 +81,8 @@ Commit message javaslat:
 
 1. Nyisd meg a `/api/health` címet: elvárt HTTP 200 és `status: ok`.
 2. Nyisd meg bejelentkezés nélkül a `/api/me` címet: elvárt HTTP 401 `unauthorized`.
-3. Jelentkezz be a LaborNaplóba e-mailes OTP-vel: az SPA API access tokent kér, a `/api/me` végpontot meghívja, és sikeres ellenőrzés esetén a válaszban `authenticated: true` szerepel.
-4. Ha a tokenellenőrzés konfigurációs hibával leáll, az API 503-at ad. Ilyenkor a Static Web Apps API logjában keresd a `LaborNapló API authentication configuration error` bejegyzést. Tokent vagy teljes Authorization fejlécet soha ne másolj be hibajegybe vagy chatbe.
+3. Jelentkezz be a Leletkeba e-mailes OTP-vel: az SPA API access tokent kér, a `/api/me` végpontot meghívja, és sikeres ellenőrzés esetén a válaszban `authenticated: true` szerepel.
+4. Ha a tokenellenőrzés konfigurációs hibával leáll, az API 503-at ad. Ilyenkor a Static Web Apps API logjában keresd a `Leletke API authentication configuration error` bejegyzést. Tokent vagy teljes Authorization fejlécet soha ne másolj be hibajegybe vagy chatbe.
 
 ## Fontos korlátozás
 

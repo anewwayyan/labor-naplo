@@ -1,4 +1,4 @@
-# LaborNapló – JWT diagnosztika (3. kör)
+# Leletke – JWT diagnosztika (3. kör)
 
 Ez a csomag csak ideiglenes hibakeresésre szolgál. A bearer tokent, e-mail-címet, felhasználói azonosítót és teljes JWT-claim értékeket nem naplózza és nem küldi vissza.
 

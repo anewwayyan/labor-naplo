@@ -1,4 +1,4 @@
-# LaborNapló – tervezett architektúra
+# Leletke – tervezett architektúra
 
 ## Jelenlegi állapot
 

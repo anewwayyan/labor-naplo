@@ -1,4 +1,4 @@
-/* LaborNapló sign-in and protected API check.
+/* Leletke sign-in and protected API check.
  * Microsoft Entra External ID handles the email OTP sign-in.
  * The SPA then requests an API-specific access token and calls /api/me.
  * The API independently validates the token signature and claims.
@@ -93,7 +93,7 @@ async function startAuthentication() {
         loggerOptions: {
           loggerCallback: (level, message, containsPii) => {
             if (!containsPii && level === LogLevel.Error) {
-              console.error('[LaborNapló auth]', message);
+              console.error('[Leletke auth]', message);
             }
           },
           piiLoggingEnabled: false,
@@ -155,6 +155,64 @@ async function startAuthentication() {
           throw new Error('A szerver válasza nem tartalmaz érvényes leletlistát.');
         }
         return result.reports;
+      },
+
+      async getReportPdf(reportId) {
+        const currentAccount = msalInstance.getActiveAccount();
+        if (!currentAccount) {
+          throw new Error('A PDF megtekintéséhez előbb be kell jelentkezned.');
+        }
+        if (typeof reportId !== 'string' || !/^[0-9a-f-]{36}$/i.test(reportId)) {
+          throw new Error('Érvénytelen leletazonosító.');
+        }
+
+        let accessToken;
+        try {
+          const tokenResult = await msalInstance.acquireTokenSilent({
+            scopes: [AUTH_CONFIG.apiScope],
+            account: currentAccount
+          });
+          accessToken = tokenResult.accessToken;
+        } catch (error) {
+          if (error instanceof InteractionRequiredAuthError ||
+              error?.errorCode === 'interaction_required' ||
+              error?.errorCode === 'consent_required') {
+            const tokenResult = await msalInstance.acquireTokenPopup({
+              scopes: [AUTH_CONFIG.apiScope],
+              account: currentAccount
+            });
+            accessToken = tokenResult.accessToken;
+          } else {
+            throw error;
+          }
+        }
+
+        const response = await fetch(
+          `${AUTH_CONFIG.apiBaseUrl}/api/reports/${encodeURIComponent(reportId)}/pdf`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              Accept: 'application/pdf'
+            },
+            cache: 'no-store'
+          }
+        );
+
+        if (!response.ok) {
+          let result = {};
+          try { result = await response.json(); } catch { /* use a safe generic message */ }
+          if (response.status === 401) {
+            throw new Error('A munkamenet lejárt. Frissítsd az oldalt, majd próbáld újra.');
+          }
+          throw new Error(result.message || 'A PDF megnyitása nem sikerült. Próbáld újra később.');
+        }
+
+        const blob = await response.blob();
+        if (blob.type !== 'application/pdf' || blob.size === 0 || blob.size > 20 * 1024 * 1024) {
+          throw new Error('A szerver nem érvényes PDF-dokumentumot küldött.');
+        }
+        return blob;
       },
 
       async deleteReport(reportId) {
@@ -284,14 +342,14 @@ async function startAuthentication() {
     }
 
     async function verifyApiAccess(currentAccount) {
-      console.log('[LaborNapló] verifyApiAccess elindult');
+      console.log('[Leletke] verifyApiAccess elindult');
       let tokenResponse;
       try {
         tokenResponse = await msalInstance.acquireTokenSilent({
           scopes: [AUTH_CONFIG.apiScope],
           account: currentAccount
         });
-        console.log('[LaborNapló] Token megszerzése sikerült:', {
+        console.log('[Leletke] Token megszerzése sikerült:', {
   hasAccessToken: Boolean(tokenResponse?.accessToken),
   expiresOn: tokenResponse?.expiresOn
 });
@@ -319,7 +377,7 @@ const paddedHeader = encodedHeader.padEnd(
 );
 const tokenHeader = JSON.parse(atob(paddedHeader));
 
-console.log('LaborNapló token fejléc:', {
+console.log('Leletke token fejléc:', {
   alg: tokenHeader.alg,
   kid: tokenHeader.kid || null,
   typ: tokenHeader.typ || null
@@ -342,7 +400,7 @@ console.log('LaborNapló token fejléc:', {
         const joseName = typeof rejection?.joseName === 'string' ? rejection.joseName : null;
         const algorithm = typeof rejection?.tokenAlgorithm === 'string' ? rejection.tokenAlgorithm : null;
         const hasKeyId = rejection?.tokenHasKeyId === true;
-        if (code) console.info('[LaborNapló API diagnostic]', {
+        if (code) console.info('[Leletke API diagnostic]', {
           diagnosticCode: code,
           joseCode,
           joseName,
@@ -383,7 +441,7 @@ console.log('LaborNapló token fejléc:', {
           prompt: 'login'
         });
       } catch (error) {
-        console.error('[LaborNapló auth] Login failed:', error);
+        console.error('[Leletke auth] Login failed:', error);
         showAuthError('A bejelentkezés most nem sikerült. Ellenőrizd az Entra-beállításokat, majd próbáld újra.');
         loginButton.disabled = false;
         loginButton.textContent = 'Belépés e-maillel';
@@ -401,13 +459,13 @@ console.log('LaborNapló token fejléc:', {
           postLogoutRedirectUri
         });
       } catch (error) {
-        console.error('[LaborNapló auth] Logout failed:', error);
+        console.error('[Leletke auth] Logout failed:', error);
         showAuthError('A kijelentkezés nem sikerült. Próbáld újra.');
         logoutButton.disabled = false;
       }
     });
   } catch (error) {
-    console.error('[LaborNapló auth] Initialization or API verification failed:', error);
+    console.error('[Leletke auth] Initialization or API verification failed:', error);
     showSignedOut();
     showAuthError(error?.message || 'A bejelentkezés vagy a biztonságos API-ellenőrzés nem sikerült. Frissítsd az oldalt, és ellenőrizd az Entra-beállításokat.');
     loginButton.disabled = false;

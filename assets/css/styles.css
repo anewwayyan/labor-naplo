@@ -167,3 +167,31 @@
       .report-status { align-self: flex-start; }
       .report-details { grid-template-columns: 1fr 1fr; }
     }
+
+    .report-preview-btn { border: 1px solid #cfe3da; border-radius: 9px; background: #f5faf7; color: #176b55; padding: 5px 10px; font-size: 11px; font-weight: 700; }
+    .report-preview-btn:hover { background: #e8f4ed; }
+    .report-preview-btn:disabled { opacity: .55; cursor: wait; }
+    .pdf-preview[hidden] { display: none; }
+    .pdf-preview { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; }
+    .pdf-preview-backdrop { position: absolute; inset: 0; background: rgba(13, 25, 21, .72); }
+    .pdf-preview-panel { position: relative; display: flex; flex-direction: column; width: min(1100px, 100%); height: min(900px, calc(100vh - 40px)); background: #f4f6f5; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.28); }
+    .pdf-preview-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 16px; background: white; border-bottom: 1px solid var(--line); }
+    .pdf-preview-heading { min-width: 0; display: grid; gap: 2px; }
+    .pdf-preview-heading strong { overflow-wrap: anywhere; font-size: 13px; }
+    .pdf-preview-heading span { color: var(--muted); font-size: 10px; }
+    .pdf-preview-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .pdf-preview-actions .secondary-btn { padding: 8px 11px; font-size: 11px; }
+    .pdf-preview-close { width: 34px; height: 34px; border: 0; border-radius: 9px; background: #f1f4f2; color: #52635b; font-size: 24px; line-height: 1; }
+    .pdf-preview-panel iframe { flex: 1; width: 100%; min-height: 0; border: 0; background: #dce2df; }
+    .pdf-preview-status { padding: 12px 16px; color: var(--muted); background: white; font-size: 12px; }
+    .pdf-preview-error { color: #9b3d32; background: #fff8f6; }
+    body.pdf-preview-open { overflow: hidden; }
+    .pdf-preview-panel:fullscreen { width: 100%; height: 100%; max-width: none; border-radius: 0; }
+    .pdf-preview-panel:fullscreen .pdf-preview-header { padding: 10px 18px; }
+    @media (max-width: 760px) {
+      .pdf-preview { padding: 0; }
+      .pdf-preview-panel { width: 100%; height: 100%; border-radius: 0; }
+      .pdf-preview-header { padding: 10px 12px; }
+      .pdf-preview-actions .secondary-btn { padding: 7px 9px; }
+      .report-card-actions { flex-wrap: wrap; }
+    }

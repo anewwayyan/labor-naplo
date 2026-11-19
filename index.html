@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f5f8f7" />
-  <title>LaborNapló – személyes laboreredmények</title>
+  <title>Leletke – személyes laboreredmények</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
   <link rel="stylesheet" href="assets/css/auth.css" />
 </head>
@@ -12,7 +12,7 @@
   <div class="app">
     <section class="auth-screen" id="authScreen" aria-labelledby="authTitle">
       <div class="auth-card">
-        <div class="auth-brand"><div class="brand-mark">＋</div><span>LaborNapló</span></div>
+        <div class="auth-brand"><div class="brand-mark">＋</div><span>Leletke</span></div>
         <div class="auth-icon" aria-hidden="true">✉</div>
         <div class="eyebrow">Személyes laboreredmények</div>
         <h1 id="authTitle">Belépés e-maillel</h1>
@@ -30,7 +30,7 @@
 
     <div id="authenticatedApp" hidden>
     <header class="topbar">
-      <div class="brand"><div class="brand-mark">＋</div><span>LaborNapló</span></div>
+      <div class="brand"><div class="brand-mark">＋</div><span>Leletke</span></div>
       <div class="top-right"><span class="user-label" id="authUserEmail">Bejelentkezve</span><button type="button" class="auth-logout-btn" id="logoutButton">Kilépés</button><div class="avatar" id="authAvatar">U</div></div>
     </header>
 
@@ -49,7 +49,7 @@
       <main>
         <section class="page active" id="page-home">
           <div class="header-row">
-            <div><div class="eyebrow">Üdvözlünk a LaborNaplóban</div><h1>A laboreredményeid,<br>egy helyen.</h1><p class="subheading">Töltsd fel az első leletedet, a többit együtt követheted.</p></div>
+            <div><div class="eyebrow">Üdvözlünk a Leletkeban</div><h1>A laboreredményeid,<br>egy helyen.</h1><p class="subheading">Töltsd fel az első leletedet, a többit együtt követheted.</p></div>
             <button class="primary-btn" id="topUpload">＋ Új lelet feltöltése</button>
           </div>
 
@@ -131,6 +131,25 @@
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="pdf-preview" id="pdfPreview" hidden role="dialog" aria-modal="true" aria-labelledby="pdfPreviewTitle">
+    <div class="pdf-preview-backdrop" id="pdfPreviewBackdrop"></div>
+    <section class="pdf-preview-panel">
+      <header class="pdf-preview-header">
+        <div class="pdf-preview-heading">
+          <strong id="pdfPreviewTitle">Laborlelet.pdf</strong>
+          <span>Biztonságos dokumentum-megjelenítő</span>
+        </div>
+        <div class="pdf-preview-actions">
+          <button type="button" class="secondary-btn" id="pdfPreviewFullscreen">Teljes képernyő</button>
+          <button type="button" class="pdf-preview-close" id="pdfPreviewClose" aria-label="PDF-megjelenítő bezárása">×</button>
+        </div>
+      </header>
+      <div class="pdf-preview-status" id="pdfPreviewLoading" hidden>A PDF betöltése…</div>
+      <div class="pdf-preview-status pdf-preview-error" id="pdfPreviewError" role="alert" hidden></div>
+      <iframe id="pdfPreviewFrame" title="A feltöltött laborlelet PDF-dokumentuma" src="about:blank"></iframe>
+    </section>
+  </div>
+
 
   <script src="assets/js/auth-config.js"></script>
   <script src="assets/js/app.js" defer></script>
