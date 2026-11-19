@@ -1,5 +1,5 @@
 /*
- * LaborNapló – Microsoft Entra External ID configuration.
+ * Leletke – Microsoft Entra External ID configuration.
  * These identifiers are public client/resource IDs, not secrets.
  * Never place client secrets, passwords, or API keys in frontend files.
  */
