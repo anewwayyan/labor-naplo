@@ -162,18 +162,28 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Allergies_Owner_Subst
         ON dbo.Allergies (TenantId, OwnerUserId, Substance);
 
 /* Grant only the operations needed by the authenticated API. */
-GRANT SELECT, INSERT, UPDATE ON OBJECT::dbo.UserProfiles TO [labornaplo_app_role];
-GRANT SELECT, INSERT, UPDATE, DELETE ON OBJECT::dbo.HealthConditions TO [labornaplo_app_role];
-GRANT SELECT, INSERT, UPDATE, DELETE ON OBJECT::dbo.MedicalEvents TO [labornaplo_app_role];
-GRANT SELECT, INSERT, UPDATE, DELETE ON OBJECT::dbo.Medications TO [labornaplo_app_role];
-GRANT SELECT, INSERT, UPDATE, DELETE ON OBJECT::dbo.Allergies TO [labornaplo_app_role];
+GRANT SELECT, INSERT ON OBJECT::dbo.UserProfiles TO [labornaplo_app_role];
+GRANT UPDATE (FirstName, PreferredName, GreetingEnabled, DateOfBirth, Sex, UpdatedAt)
+    ON OBJECT::dbo.UserProfiles TO [labornaplo_app_role];
 
-/* Ownership is always derived from the verified token, never client input. */
-DENY UPDATE (TenantId, OwnerUserId) ON OBJECT::dbo.UserProfiles TO [labornaplo_app_role];
-DENY UPDATE (TenantId, OwnerUserId) ON OBJECT::dbo.HealthConditions TO [labornaplo_app_role];
-DENY UPDATE (TenantId, OwnerUserId) ON OBJECT::dbo.MedicalEvents TO [labornaplo_app_role];
-DENY UPDATE (TenantId, OwnerUserId) ON OBJECT::dbo.Medications TO [labornaplo_app_role];
-DENY UPDATE (TenantId, OwnerUserId) ON OBJECT::dbo.Allergies TO [labornaplo_app_role];
+GRANT SELECT, INSERT, DELETE ON OBJECT::dbo.HealthConditions TO [labornaplo_app_role];
+GRANT UPDATE (Name, Details, Status, DiagnosedDate, ResolvedDate, UpdatedAt)
+    ON OBJECT::dbo.HealthConditions TO [labornaplo_app_role];
+
+GRANT SELECT, INSERT, DELETE ON OBJECT::dbo.MedicalEvents TO [labornaplo_app_role];
+GRANT UPDATE (EventType, Title, Details, EventDate, Facility, UpdatedAt)
+    ON OBJECT::dbo.MedicalEvents TO [labornaplo_app_role];
+
+GRANT SELECT, INSERT, DELETE ON OBJECT::dbo.Medications TO [labornaplo_app_role];
+GRANT UPDATE (Name, ActiveIngredient, Dose, Frequency, Instructions, StartDate, EndDate, IsActive, UpdatedAt)
+    ON OBJECT::dbo.Medications TO [labornaplo_app_role];
+
+GRANT SELECT, INSERT, DELETE ON OBJECT::dbo.Allergies TO [labornaplo_app_role];
+GRANT UPDATE (Substance, Reaction, Severity, Notes, UpdatedAt)
+    ON OBJECT::dbo.Allergies TO [labornaplo_app_role];
+
+/* TenantId and OwnerUserId are deliberately excluded from UPDATE grants.
+   The API can change profile content, but cannot transfer row ownership. */
 
 /* Dedicated policy keeps the existing laboratory policy untouched. */
 IF NOT EXISTS
