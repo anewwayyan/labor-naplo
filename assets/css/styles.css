@@ -690,3 +690,15 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
     font-size: 19px;
   }
 }
+
+
+/* Small heart accent beside the Leletke brand name */
+.brand-heart {
+  display: inline-block;
+  margin-left: 5px;
+  color: #d87580;
+  font-size: .76em;
+  line-height: 1;
+  transform: rotate(12deg) translateY(-1px);
+  vertical-align: middle;
+}
