@@ -139,7 +139,7 @@ app.http('getReportPdf', {
         Number(report.fileSizeBytes) <= 0 ||
         Number(report.fileSizeBytes) > MAX_FILE_SIZE
       ) {
-        context.error('LaborNapló PDF preview rejected unexpected document metadata.');
+        context.error('Leletke PDF preview rejected unexpected document metadata.');
         return errorResponse(415, 'unsupported_document', 'Ez a dokumentum nem jeleníthető meg PDF-ként.');
       }
 
@@ -153,7 +153,7 @@ app.http('getReportPdf', {
         pdfBuffer.length > MAX_FILE_SIZE ||
         pdfBuffer.subarray(0, 5).toString('ascii') !== '%PDF-'
       ) {
-        context.error('LaborNapló PDF preview found invalid stored PDF content.');
+        context.error('Leletke PDF preview found invalid stored PDF content.');
         return errorResponse(415, 'invalid_stored_pdf', 'A tárolt dokumentum nem érvényes PDF.');
       }
 
@@ -182,17 +182,17 @@ app.http('getReportPdf', {
       }
 
       if (error instanceof AuthConfigurationError || error?.code === 'AUTH_CONFIGURATION_ERROR') {
-        context.error('LaborNapló PDF preview authentication configuration error.');
+        context.error('Leletke PDF preview authentication configuration error.');
         return errorResponse(503, 'authentication_not_configured', 'A biztonságos API-hitelesítés beállítása még nem teljes.');
       }
 
       if (error instanceof DatabaseConfigurationError || error?.code === 'DATABASE_CONFIGURATION_ERROR') {
-        context.error('LaborNapló PDF preview database configuration error.');
+        context.error('Leletke PDF preview database configuration error.');
         return errorResponse(503, 'database_not_configured', 'Az adatbázis-kapcsolat beállítása még nem teljes.');
       }
 
       if (error instanceof StorageConfigurationError || error?.code === 'STORAGE_CONFIGURATION_ERROR') {
-        context.error('LaborNapló PDF preview storage configuration error.');
+        context.error('Leletke PDF preview storage configuration error.');
         return errorResponse(503, 'storage_not_configured', 'A biztonságos fájltároló jelenleg nem érhető el.');
       }
 
@@ -200,7 +200,7 @@ app.http('getReportPdf', {
         return errorResponse(404, 'document_not_found', 'A PDF-fájl nem található a dokumentumtárban.');
       }
 
-      context.error('LaborNapló PDF preview failed:', error?.code || error?.name || 'UNKNOWN');
+      context.error('Leletke PDF preview failed:', error?.code || error?.name || 'UNKNOWN');
       return errorResponse(503, 'pdf_preview_unavailable', 'A PDF megnyitása most nem sikerült. Próbáld újra később.');
     }
   }
