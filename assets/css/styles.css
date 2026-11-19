@@ -103,6 +103,14 @@
       padding: 0;
       font-size: 20px;
       line-height: 1;
+      background: #984653;
+      border-color: #984653;
+      box-shadow: 0 4px 10px rgba(152, 70, 83, .2);
+    }
+    .remove-file.primary-btn:hover {
+      background: #7f3744;
+      border-color: #7f3744;
+      box-shadow: 0 6px 14px rgba(127, 55, 68, .24);
     }
     .notice { display: flex; gap: 9px; align-items: flex-start; background: #f7f9f8; border: 1px solid var(--line); padding: 11px 13px; border-radius: 12px; color: #697872; font-size: 11px; margin-top: 15px; }
     .notice b { color: #465750; }
