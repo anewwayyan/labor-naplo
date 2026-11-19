@@ -8,8 +8,8 @@ window.LABORNAPLO_AUTH_CONFIG = {
   clientId: '1edcad85-b889-428d-93e7-1734fcc6040d',
   // External tenant subdomain (the part before .ciamlogin.com).
   tenantSubdomain: 'labornaplo',
-  redirectUri: 'https://gray-hill-07110e210.4.azurestaticapps.net/',
-  postLogoutRedirectUri: 'https://gray-hill-07110e210.4.azurestaticapps.net/',
+  redirectUri: 'https://leletke.hu/',
+  postLogoutRedirectUri: 'https://leletke.hu/',
   // Standalone Azure Functions API base URL.
   apiBaseUrl: 'https://labor-naplo-api-hcd4h0cvbsbyekg0.northeurope-01.azurewebsites.net',
   // Delegated scope exposed by LaborNaplo-API.
