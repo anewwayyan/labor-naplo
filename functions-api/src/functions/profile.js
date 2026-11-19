@@ -127,7 +127,7 @@ app.http('getProfile', {
         return new sql.Request(transaction)
           .input('tenantId', sql.UniqueIdentifier, user.tenantId)
           .input('ownerUserId', sql.UniqueIdentifier, user.userId)
-          .query(\`
+          .query(`
             SELECT
               FirstName AS firstName,
               PreferredName AS preferredName,
@@ -137,7 +137,7 @@ app.http('getProfile', {
             FROM dbo.UserProfiles
             WHERE TenantId = @tenantId
               AND OwnerUserId = @ownerUserId;
-          \`);
+          `);
       });
 
       return response(200, null, {
@@ -190,7 +190,7 @@ app.http('saveProfile', {
           .input('hasSex', sql.Bit, values.sex !== undefined)
           .input('sex', sql.NVarChar(30), values.sex ?? null);
 
-        return query.query(\`
+        return query.query(`
           IF EXISTS
           (
             SELECT 1
@@ -227,7 +227,7 @@ app.http('saveProfile', {
           FROM dbo.UserProfiles
           WHERE TenantId = @tenantId
             AND OwnerUserId = @ownerUserId;
-        \`);
+        `);
       });
 
       return response(200, null, {
