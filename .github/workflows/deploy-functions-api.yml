@@ -42,6 +42,7 @@ jobs:
           node --check src/functions/health.js
           node --check src/functions/me.js
           node --check src/functions/profile.js
+          node --check src/functions/health-records.js
           node --check src/functions/db-check.js
           node --check src/functions/rls-test.js
           node --check src/functions/upload-report.js
