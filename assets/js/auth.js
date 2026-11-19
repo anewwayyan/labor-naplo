@@ -236,6 +236,29 @@ console.log('LaborNapló token fejléc:', {
           credentials: 'same-origin'
         });
       };
+      async function listHealthRecords(path) {
+        const response = await window.laborNaploApiRequest(path, { method: 'GET' });
+        let result;
+        try {
+          result = await response.json();
+        } catch {
+          throw new Error('Az API érvénytelen választ adott.');
+        }
+        if (!response.ok) {
+          throw new Error(result?.message || 'Az adatok lekérdezése nem sikerült.');
+        }
+        if (!result || !Array.isArray(result.items)) {
+          throw new Error('Az API válaszának formátuma nem megfelelő.');
+        }
+        return result.items;
+      }
+
+      // Public, authenticated read methods for the profile UI and controlled testing.
+      window.LABORNAPLO_AUTH = Object.freeze({
+        listMedications: () => listHealthRecords('/api/medications'),
+        listAllergies: () => listHealthRecords('/api/allergies')
+      });
+
       showSignedIn(currentAccount);
       window.dispatchEvent(new CustomEvent('labor-naplo-authenticated'));
     }
