@@ -24,6 +24,8 @@ These scripts target the Azure SQL database `labor-naplo-db` on
    set its read-only session context and queried only the reports visible to
    that user under RLS.
 
+6. Run `003_create_user_profiles.sql` after the existing schema and RLS migrations. It creates the per-user profile root and the health-background collections (`HealthConditions`, `MedicalEvents`, `Medications`, `Allergies`) with a dedicated RLS policy. This migration is also manual; review it before execution and do not put real health data into test records.
+
 ## Security notes
 
 - The API derives `TenantId` and `OwnerUserId` from the verified token's
