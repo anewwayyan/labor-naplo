@@ -55,7 +55,7 @@ app.http('dbCheck', {
         error?.code === 'AUTH_CONFIGURATION_ERROR' ||
         error?.code === 'DATABASE_CONFIGURATION_ERROR'
       ) {
-        context.error('LaborNapló database check configuration error:', error.code);
+        context.error('Leletke database check configuration error:', error.code);
         return {
           status: 503,
           headers: { 'Cache-Control': 'no-store' },
@@ -66,7 +66,7 @@ app.http('dbCheck', {
         };
       }
 
-      context.error('LaborNapló database connectivity check failed:', error?.code || error?.name || 'UNKNOWN');
+      context.error('Leletke database connectivity check failed:', error?.code || error?.name || 'UNKNOWN');
       return {
         status: 503,
         headers: { 'Cache-Control': 'no-store' },
