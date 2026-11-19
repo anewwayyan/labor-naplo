@@ -34,3 +34,34 @@
   .auth-logout-btn { padding: 6px 8px; }
   .top-right { gap: 7px; }
 }
+
+
+/* Matching the calm, modern Leletke visual language */
+.auth-screen {
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(210, 235, 224, .82), transparent 28rem),
+    radial-gradient(ellipse at 90% 90%, rgba(229, 239, 233, .65), transparent 24rem),
+    #f3f7f5;
+}
+.auth-card {
+  width: min(100%, 460px);
+  padding: 38px 36px;
+  border-color: rgba(222, 234, 227, .95);
+  border-radius: 25px;
+  box-shadow: 0 22px 65px rgba(29, 66, 54, .11);
+}
+.auth-brand { margin-bottom: 31px; }
+.auth-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #e1f1e9, #edf7f1);
+  color: #187765;
+}
+.auth-card h1 { letter-spacing: -1.15px; }
+.auth-description { line-height: 1.7; }
+.auth-setup-note { border-radius: 14px; line-height: 1.6; }
+.auth-security { line-height: 1.5; }
+@media (max-width: 760px) {
+  .auth-card { padding: 29px 22px; border-radius: 21px; }
+}
