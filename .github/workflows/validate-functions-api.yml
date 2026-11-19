@@ -3,6 +3,7 @@ name: Validate Leletke API
 on:
   pull_request:
     branches:
+      - feature/profile-api
       - feature/profile-database-schema
       - feature/azure-functions-api
     paths:
