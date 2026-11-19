@@ -1,4 +1,4 @@
-name: Deploy LaborNapló API
+name: Deploy Leletke API
 
 on:
   push:
