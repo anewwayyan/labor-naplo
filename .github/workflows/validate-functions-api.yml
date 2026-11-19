@@ -9,6 +9,7 @@ on:
     paths:
       - 'functions-api/**'
       - '.github/workflows/validate-functions-api.yml'
+      - '.github/workflows/deploy-functions-api.yml'
 
 permissions:
   contents: read
