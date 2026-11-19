@@ -1,4 +1,4 @@
-# LaborNapló API
+# Leletke API
 
 Azure Functions v4, JavaScript programming model v4.
 
