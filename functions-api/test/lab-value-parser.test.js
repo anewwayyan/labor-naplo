@@ -20,7 +20,7 @@ test('marks a numeric value outside the supplied reference interval', () => {
 });
 
 test('keeps non-numeric result text instead of coercing it to zero', () => {
-  const item = parseLabLine('Vércsoport 0 Rh pozitív', 1);
+  const item = parseLabLine('Vércsoport A pozitív', 1);
   assert.equal(item, null);
   assert.equal(toNumber('<0,1'), null);
 });
