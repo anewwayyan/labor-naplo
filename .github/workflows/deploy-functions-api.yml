@@ -49,6 +49,9 @@ jobs:
           node --check src/functions/list-reports.js
           node --check src/functions/delete-report.js
           node --check src/functions/get-report-pdf.js
+          node --check src/functions/extract-report-values.js
+          node --check src/functions/lab-values.js
+          node --check src/lib/lab-value-parser.js
           node --check src/lib/auth.js
           node --check src/lib/database.js
 
