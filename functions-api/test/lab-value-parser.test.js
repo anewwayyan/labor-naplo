@@ -76,3 +76,21 @@ test('normalizes a hyphen reference interval to an en dash', () => {
   assert.equal(item.referenceRange, '4–5');
   assert.equal(item.isAbnormal, true);
 });
+
+test('normalizes suffix inequality reference limits to prefix form', () => {
+  const cases = [
+    ['Koleszterin 4,6 mmol/L 5<', '>5', 5, null, false],
+    ['Hemoglobin 145 g/L 120>', '<120', null, 120, false],
+    ['Glükóz 5,1 mmol/L 5≤', '≥5', 5, null, false],
+    ['Glükóz 4,9 mmol/L 5≥', '≤5', null, 5, false],
+    ['Glükóz 5 mmol/L 5<', '>5', 5, null, true],
+    ['Hemoglobin 120 g/L 120>', '<120', null, 120, true]
+  ];
+  for (const [line, expectedRange, expectedLow, expectedHigh, expectedAbnormal] of cases) {
+    const item = parseLabLine(line, 1);
+    assert.equal(item.referenceRange, expectedRange);
+    assert.equal(item.referenceLow, expectedLow);
+    assert.equal(item.referenceHigh, expectedHigh);
+    assert.equal(item.isAbnormal, expectedAbnormal);
+  }
+});
