@@ -38,3 +38,15 @@ test('ignores duplicate OCR lines and preserves source page', () => {
   assert.equal(items.length, 1);
   assert.equal(items[0].sourcePageNumber, 1);
 });
+
+test('does not treat the L in mg/L as a low-result flag', () => {
+  const item = parseLabLine('CRP 2 mg/L 0-5', 1);
+  assert.equal(item.unit, 'mg/L');
+  assert.equal(item.isAbnormal, false);
+});
+
+test('recognizes a standalone high flag after the unit', () => {
+  const item = parseLabLine('CRP 8 mg/L 0-5 H', 1);
+  assert.equal(item.unit, 'mg/L');
+  assert.equal(item.isAbnormal, true);
+});
