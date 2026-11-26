@@ -29,6 +29,11 @@ const selectedFile = document.getElementById('selectedFile');
 const fileName = document.getElementById('fileName');
 const fileSize = document.getElementById('fileSize');
 const uploadButton = document.getElementById('uploadFile');
+const firstUploadPrompt = document.getElementById('firstUploadPrompt');
+
+function hideFirstUploadPrompt() {
+  if (firstUploadPrompt) firstUploadPrompt.hidden = true;
+}
 let selectedPdfFile = null;
 
 const reportsList = document.getElementById('reportsList');
@@ -240,6 +245,7 @@ async function loadReports(force = false) {
   try {
     const reports = await window.LABORNAPLO_AUTH.listReports();
     renderReports(reports);
+    if (reports.length > 0) hideFirstUploadPrompt();
     reportsLoaded = true;
   } catch (error) {
     console.error('[Leletke reports]', error);
@@ -327,6 +333,7 @@ uploadButton.addEventListener('click', async () => {
     const result = await window.LABORNAPLO_AUTH.uploadPdf(file);
     const uploadedName = result.report.originalFileName || file.name;
     clearSelectedFile();
+    hideFirstUploadPrompt();
     showToast(`Sikeres feltöltés: ${uploadedName}`);
     reportsLoaded = false;
     if (document.getElementById('page-documents').classList.contains('active')) {
@@ -778,4 +785,5 @@ document.addEventListener('keydown', event => {
     window.addEventListener('labor-naplo-authenticated', () => {
       loadProfile(true);
       loadLatestLabValues(true);
+      loadReports(true);
     });
