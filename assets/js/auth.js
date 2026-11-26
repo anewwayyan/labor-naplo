@@ -524,9 +524,52 @@ console.log('Leletke token fejléc:', {
         return result.items;
       }
 
+      async function callLabApi(path, options = {}) {
+        const response = await window.laborNaploApiRequest(path, options);
+        let result = {};
+        try { result = await response.json(); } catch { /* use the safe generic error below */ }
+        if (!response.ok) {
+          throw new Error(result?.message || 'A laboradatok feldolgozása nem sikerült.');
+        }
+        return result;
+      }
+
       Object.assign(window.LABORNAPLO_AUTH, {
         listMedications: () => listHealthRecords('/api/medications'),
-        listAllergies: () => listHealthRecords('/api/allergies')
+        listAllergies: () => listHealthRecords('/api/allergies'),
+        async extractReportValues(reportId) {
+          if (typeof reportId !== 'string' || !/^[0-9a-f-]{36}$/i.test(reportId)) {
+            throw new Error('Érvénytelen leletazonosító.');
+          }
+          return callLabApi('/api/reports/' + encodeURIComponent(reportId) + '/extract', {
+            method: 'POST'
+          });
+        },
+        async listExtractedReportValues(reportId) {
+          if (typeof reportId !== 'string' || !/^[0-9a-f-]{36}$/i.test(reportId)) {
+            throw new Error('Érvénytelen leletazonosító.');
+          }
+          const result = await callLabApi('/api/reports/' + encodeURIComponent(reportId) + '/values', {
+            method: 'GET'
+          });
+          if (!Array.isArray(result.items)) throw new Error('A szerver nem érvényes értéklistát adott.');
+          return result.items;
+        },
+        async approveReportValues(reportId, values) {
+          if (typeof reportId !== 'string' || !/^[0-9a-f-]{36}$/i.test(reportId) || !Array.isArray(values)) {
+            throw new Error('Érvénytelen mentési kérés.');
+          }
+          return callLabApi('/api/reports/' + encodeURIComponent(reportId) + '/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ values })
+          });
+        },
+        async listLabValues() {
+          const result = await callLabApi('/api/lab-values', { method: 'GET' });
+          if (!Array.isArray(result.items)) throw new Error('A szerver nem érvényes laboreredmény-listát adott.');
+          return result.items;
+        }
       });
 
       showSignedIn(currentAccount);

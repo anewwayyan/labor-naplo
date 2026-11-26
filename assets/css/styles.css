@@ -800,3 +800,38 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
   box-shadow: none;
   border-radius: 0;
 }
+
+/* Laboratory extraction review and approved results */
+.review-panel { margin-bottom: 24px; }
+.review-panel-head, .review-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.review-panel-head h2 { margin: 0; }
+.review-panel-head .small-muted { margin: 5px 0 0; }
+.review-guidance { margin: 16px 0; padding: 12px 14px; border: 1px solid #e6dfc9; border-radius: 11px; background: #fbf8ef; color: #675b3e; font-size: 12px; line-height: 1.55; }
+.review-values { display: grid; gap: 10px; }
+.review-value-row { display: grid; grid-template-columns: minmax(150px, 1.4fr) minmax(90px, .7fr) minmax(90px, .7fr) minmax(100px, .9fr) 38px; gap: 9px; align-items: end; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.review-field { display: grid; gap: 5px; min-width: 0; color: var(--muted); font-size: 10px; font-weight: 700; }
+.review-field input { width: 100%; min-width: 0; height: 39px; padding: 8px 9px; border: 1px solid #dce7e1; border-radius: 8px; color: var(--text); background: #fff; font: inherit; font-size: 12px; }
+.review-field input:focus { outline: 2px solid rgba(23,123,104,.18); border-color: var(--primary); }
+.review-remove { width: 36px; height: 38px; border: 1px solid #ead4d8; border-radius: 9px; background: #fbf1f2; color: #984653; font-size: 19px; cursor: pointer; }
+.review-remove:hover { background: #f5e3e6; }
+.review-actions { margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line); }
+.review-status-message { margin: 0; color: var(--muted); font-size: 12px; }
+.review-status-message[data-state="error"] { color: #a33d4c; }
+.review-status-message[data-state="success"] { color: var(--primary-dark); }
+.report-status.is-review { background: #f8f1dc; color: #80672a; }
+.lab-values-list { display: grid; gap: 12px; }
+.lab-value-card { padding: 16px 18px; }
+.lab-value-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.lab-value-name { font-size: 14px; font-weight: 750; }
+.lab-value-result { font-size: 20px; font-weight: 800; white-space: nowrap; }
+.lab-value-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 9px; color: var(--muted); font-size: 11px; }
+.lab-value-flag { color: #984653; font-size: 11px; font-weight: 750; }
+.lab-value-flag.is-normal { color: var(--primary-dark); }
+@media (max-width: 700px) {
+  .review-value-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .review-field:first-child { grid-column: 1 / -1; }
+  .review-remove { justify-self: end; }
+  .review-actions { align-items: stretch; flex-direction: column; }
+  .review-actions .primary-btn { width: 100%; }
+  .review-panel-head { align-items: flex-start; }
+}
