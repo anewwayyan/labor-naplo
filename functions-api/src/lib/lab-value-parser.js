@@ -49,9 +49,9 @@ function parseLabLine(line, pageNumber) {
   let isAbnormal = null;
   if (parsedNumericValue !== null && referenceLow !== null && referenceHigh !== null) {
     isAbnormal = parsedNumericValue < referenceLow || parsedNumericValue > referenceHigh;
-  } else if (/\b(?:H|HIGH|magas|emelkedett)\b/i.test(text)) {
+  } else if (/(?:^|\s)(?:H|HIGH|magas|emelkedett)(?=\s|$)/i.test(text)) {
     isAbnormal = true;
-  } else if (/\b(?:L|LOW|alacsony|csökkent)\b/i.test(text)) {
+  } else if (/(?:^|\s)(?:L|LOW|alacsony|csökkent)(?=\s|$)/i.test(text)) {
     isAbnormal = true;
   }
 
