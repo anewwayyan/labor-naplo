@@ -70,8 +70,11 @@
             <div class="notice"><span>ⓘ</span><div><b>Adatvédelem:</b> a PDF-et a bejelentkezésed ellenőrzése után biztonságos kapcsolaton küldjük az Azure privát dokumentumtárába. A dokumentumhoz csak a jogosult fiók férhet hozzá. Az ingyenes OCR az első két oldalt dolgozza fel; F0 esetén a PDF legfeljebb 4 MB lehet.</div></div>
           </section>
 
-          <div class="section-head"><h2>Legutóbbi eredményeid</h2><span class="small-muted">Még nincs adat</span></div>
-          <div class="card empty-card"><div class="empty-icon">⌁</div><div><strong>Itt jelennek majd meg az eredményeid</strong><p>Az első lelet feldolgozása után itt láthatod a legfontosabb értékeket és azok változását.</p></div></div>
+          <div class="section-head"><h2>Legutóbbi eredményeid</h2><button type="button" class="text-btn" data-go="results">Minden eredmény megtekintése →</button></div>
+          <div class="card content-card reports-message" id="latestLabValuesLoading" hidden>Eredmények betöltése…</div>
+          <div class="card empty-card" id="latestLabValuesEmpty"><div class="empty-icon">⌁</div><div><strong>Még nincsenek mentett eredményeid</strong><p>Az első lelet feldolgozása és mentése után itt jelenik meg a legutóbbi leleted.</p></div></div>
+          <div class="latest-lab-values-list" id="latestLabValuesList" aria-live="polite"></div>
+          <div class="card content-card reports-message reports-error" id="latestLabValuesError" role="alert" hidden></div>
 
           <div class="section-head"><h2>Így működik</h2></div>
           <div class="steps">
