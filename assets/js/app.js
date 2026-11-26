@@ -16,6 +16,7 @@ function navigate(page) {
   allNavButtons.forEach(button => button.classList.toggle('active', button.dataset.page === page));
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if (page === 'documents') loadReports();
+  if (page === 'results') loadLabValues();
 }
 
 allNavButtons.forEach(button => button.addEventListener('click', () => navigate(button.dataset.page)));
@@ -58,8 +59,8 @@ function formatDate(value) {
 
 function statusText(status) {
   const labels = {
-    Draft: 'Piszkozat',
-    Review: 'Ellenőrzés alatt',
+    Draft: 'Feldolgozásra vár',
+    Review: 'Ellenőrzés szükséges',
     Approved: 'Jóváhagyva',
     DeletePending: 'Törlésre vár'
   };
@@ -197,7 +198,19 @@ function renderReports(reports) {
     deleteButton.textContent = 'Törlés';
     deleteButton.setAttribute('aria-label', `Lelet törlése: ${report.originalFileName || 'Névtelen lelet'}`);
     deleteButton.addEventListener('click', () => deleteReport(report.reportId, deleteButton));
-    actions.append(status, previewButton, deleteButton);
+    if (report.status === 'Draft' || report.status === 'Review') {
+      const processButton = document.createElement('button');
+      processButton.type = 'button';
+      processButton.className = 'report-preview-btn';
+      processButton.textContent = report.status === 'Review' ? 'Ellenőrzés' : 'Feldolgozás';
+      processButton.addEventListener('click', () => {
+        if (report.status === 'Review') openReportReview(report);
+        else startReportExtraction(report, processButton);
+      });
+      actions.append(status, processButton, previewButton, deleteButton);
+    } else {
+      actions.append(status, previewButton, deleteButton);
+    }
     header.append(file, actions);
 
     const details = document.createElement('div');
@@ -328,6 +341,225 @@ uploadButton.addEventListener('click', async () => {
     uploadButton.textContent = 'Feltöltés';
   }
 });
+
+
+// Laboratory OCR review and approved result rendering.
+const reviewPanel = document.getElementById('reviewPanel');
+const reviewValuesContainer = document.getElementById('reviewValues');
+const reviewReportName = document.getElementById('reviewReportName');
+const reviewStatus = document.getElementById('reviewStatus');
+const approveValuesButton = document.getElementById('approveValuesButton');
+const labValuesList = document.getElementById('labValuesList');
+const labValuesEmpty = document.getElementById('labValuesEmpty');
+const labValuesError = document.getElementById('labValuesError');
+const labValuesCount = document.getElementById('labValuesCount');
+let activeReviewReport = null;
+let reviewItems = [];
+let labValuesLoading = false;
+
+function setReviewStatus(message, state = '') {
+  reviewStatus.textContent = message;
+  reviewStatus.dataset.state = state;
+}
+
+function createReviewField(label, value, field) {
+  const wrapper = document.createElement('label');
+  wrapper.className = 'review-field';
+  const caption = document.createElement('span');
+  caption.textContent = label;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = value ?? '';
+  input.dataset.field = field;
+  input.autocomplete = 'off';
+  wrapper.append(caption, input);
+  return wrapper;
+}
+
+function renderReviewItems() {
+  reviewValuesContainer.replaceChildren();
+  reviewItems.forEach((item, index) => {
+    const row = document.createElement('div');
+    row.className = 'review-value-row';
+    row.dataset.index = String(index);
+    row.append(
+      createReviewField('Vizsgálat neve', item.rawParameterName || '', 'parameterName'),
+      createReviewField('Eredmény', item.parsedNumericValue ?? item.rawValue ?? '', 'value'),
+      createReviewField('Mértékegység', item.unit || '', 'unit'),
+      createReviewField('Referencia-tartomány', item.referenceRange || '', 'referenceRange')
+    );
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'review-remove';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', 'Érték eltávolítása');
+    remove.addEventListener('click', () => {
+      reviewItems.splice(index, 1);
+      renderReviewItems();
+      setReviewStatus('A törölt sor nem kerül mentésre.');
+    });
+    row.append(remove);
+    reviewValuesContainer.append(row);
+  });
+  approveValuesButton.disabled = reviewItems.length === 0;
+}
+
+function showReportReview(report, items) {
+  activeReviewReport = report;
+  reviewItems = Array.isArray(items) ? items.map(item => ({ ...item })) : [];
+  reviewReportName.textContent = report.originalFileName || 'Feltöltött laborlelet';
+  reviewPanel.hidden = false;
+  setReviewStatus(reviewItems.length + ' felismert érték. Mentés előtt ellenőrizd őket.');
+  renderReviewItems();
+  navigate('results');
+  reviewPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function openReportReview(report) {
+  if (!window.LABORNAPLO_AUTH?.listExtractedReportValues) {
+    showToast('Az ellenőrző felület még nem érhető el. Frissítsd az oldalt.');
+    return;
+  }
+  try {
+    const items = await window.LABORNAPLO_AUTH.listExtractedReportValues(report.reportId);
+    showReportReview(report, items);
+  } catch (error) {
+    showToast(error?.message || 'A kinyert értékek betöltése nem sikerült.');
+  }
+}
+
+async function startReportExtraction(report, button) {
+  if (!window.LABORNAPLO_AUTH?.extractReportValues) {
+    showToast('A leletfeldolgozás még nincs összekötve az API-val.');
+    return;
+  }
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = 'Feldolgozás…';
+  try {
+    const result = await window.LABORNAPLO_AUTH.extractReportValues(report.reportId);
+    showToast(result.alreadyProcessed ? 'A lelet már fel van dolgozva.' : 'A lelet feldolgozása elkészült.');
+    showReportReview(report, result.items || []);
+    reportsLoaded = false;
+  } catch (error) {
+    console.error('[Leletke OCR]', error);
+    showToast(error?.message || 'A lelet feldolgozása nem sikerült.');
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+function parseReferenceRange(value) {
+  const match = String(value || '').match(/(-?\d+(?:[.,]\d+)?)\s*(?:-|–|—|\bto\b)\s*(-?\d+(?:[.,]\d+)?)/i);
+  if (!match) return { low: null, high: null };
+  const low = Number(match[1].replace(',', '.'));
+  const high = Number(match[2].replace(',', '.'));
+  return Number.isFinite(low) && Number.isFinite(high) && low <= high
+    ? { low, high } : { low: null, high: null };
+}
+
+approveValuesButton.addEventListener('click', async () => {
+  if (!activeReviewReport || !window.LABORNAPLO_AUTH?.approveReportValues) return;
+  const rows = [...reviewValuesContainer.querySelectorAll('.review-value-row')];
+  const values = [];
+  try {
+    for (const row of rows) {
+      const read = field => row.querySelector('[data-field="' + field + '"]')?.value.trim() || '';
+      const parameterName = read('parameterName');
+      const rawValue = read('value');
+      const unit = read('unit');
+      const referenceRange = read('referenceRange');
+      if (!parameterName || !rawValue) throw new Error('A vizsgálat neve és eredménye nem maradhat üresen.');
+      const numericText = rawValue.replace(',', '.');
+      const numeric = /^-?\d+(?:\.\d+)?$/.test(numericText) ? Number(numericText) : null;
+      const range = parseReferenceRange(referenceRange);
+      const isAbnormal = numeric !== null && range.low !== null && range.high !== null
+        ? numeric < range.low || numeric > range.high : null;
+      values.push({
+        extractedValueId: reviewItems[Number(row.dataset.index)]?.extractedValueId,
+        parameterName,
+        valueNumeric: numeric,
+        valueText: numeric === null ? rawValue : null,
+        unit,
+        referenceRange,
+        referenceLow: range.low,
+        referenceHigh: range.high,
+        isAbnormal
+      });
+    }
+    if (!values.length) throw new Error('Legalább egy laborértéket hagyj meg a mentéshez.');
+    approveValuesButton.disabled = true;
+    setReviewStatus('Mentés folyamatban…');
+    await window.LABORNAPLO_AUTH.approveReportValues(activeReviewReport.reportId, values);
+    setReviewStatus('A jóváhagyott laborértékek mentése sikerült.', 'success');
+    reviewPanel.hidden = true;
+    activeReviewReport = null;
+    reviewItems = [];
+    showToast('A laborértékek mentése sikerült.');
+    await loadLabValues(true);
+    reportsLoaded = false;
+  } catch (error) {
+    setReviewStatus(error?.message || 'A mentés nem sikerült. Ellenőrizd az adatokat.', 'error');
+    approveValuesButton.disabled = false;
+  }
+});
+
+async function loadLabValues(force = false) {
+  if (labValuesLoading) return;
+  if (!window.LABORNAPLO_AUTH?.listLabValues) {
+    labValuesError.hidden = false;
+    labValuesError.textContent = 'A laboreredmények szolgáltatás még nem érhető el.';
+    return;
+  }
+  labValuesLoading = true;
+  labValuesError.hidden = true;
+  try {
+    const items = await window.LABORNAPLO_AUTH.listLabValues();
+    labValuesList.replaceChildren();
+    labValuesCount.textContent = items.length + ' érték';
+    labValuesEmpty.hidden = items.length > 0;
+    for (const item of items) {
+      const card = document.createElement('article');
+      card.className = 'card lab-value-card';
+      const main = document.createElement('div');
+      main.className = 'lab-value-main';
+      const name = document.createElement('div');
+      name.className = 'lab-value-name';
+      name.textContent = item.parameterName || 'Laborvizsgálat';
+      const result = document.createElement('strong');
+      result.className = 'lab-value-result';
+      result.textContent = String(item.valueNumeric ?? item.valueText ?? '—') + (item.unit ? ' ' + item.unit : '');
+      main.append(name, result);
+      const meta = document.createElement('div');
+      meta.className = 'lab-value-meta';
+      const date = document.createElement('span');
+      date.textContent = 'Mintavétel: ' + formatDate(item.sampleDate);
+      const lab = document.createElement('span');
+      lab.textContent = item.labName || item.originalFileName || 'Laborlelet';
+      meta.append(date, lab);
+      if (item.referenceRange) {
+        const reference = document.createElement('span');
+        reference.textContent = 'Referencia: ' + item.referenceRange;
+        meta.append(reference);
+      }
+      const flag = document.createElement('span');
+      flag.className = 'lab-value-flag ' + (item.isAbnormal === false ? 'is-normal' : '');
+      flag.textContent = item.isAbnormal === true ? 'Referencia-tartományon kívül' :
+        item.isAbnormal === false ? 'Referencia-tartományon belül' : 'Nincs besorolva';
+      meta.append(flag);
+      card.append(main, meta);
+      labValuesList.append(card);
+    }
+  } catch (error) {
+    labValuesError.textContent = error?.message || 'A laboreredmények betöltése nem sikerült.';
+    labValuesError.hidden = false;
+  } finally {
+    labValuesLoading = false;
+  }
+}
+
+document.getElementById('refreshLabValues').addEventListener('click', () => loadLabValues(true));
 
 
 document.getElementById('pdfPreviewClose').addEventListener('click', closePdfPreview);
