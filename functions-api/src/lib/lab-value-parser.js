@@ -24,7 +24,7 @@ function parseLabLine(line, pageNumber) {
   let tail = match[3].trim();
   if (rawParameterName.length < 2 || !/[a-záéíóöőúüű]/i.test(rawParameterName)) return null;
   if (/^(?:oldal|page|dátum|date|azonosító|taj|születési)/i.test(rawParameterName) ||
-      /\\b(?:mintavétel|dátum|date|azonosító|taj|születési|laboratórium|leletszám)\\b/i.test(rawParameterName)) return null;
+      /\b(?:mintavétel|dátum|date|azonosító|taj|születési|laboratórium|leletszám)\b/i.test(rawParameterName)) return null;
 
   const rangeMatch = tail.match(RANGE_RE);
   let referenceLow = null;
