@@ -17,6 +17,7 @@ function navigate(page) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if (page === 'documents') loadReports();
   if (page === 'results') loadLabValues();
+  if (page === 'home') loadLatestLabValues();
 }
 
 allNavButtons.forEach(button => button.addEventListener('click', () => navigate(button.dataset.page)));
@@ -498,6 +499,8 @@ approveValuesButton.addEventListener('click', async () => {
     reviewItems = [];
     showToast('A laborértékek mentése sikerült.');
     await loadLabValues(true);
+    latestLabValuesLoaded = false;
+    await loadLatestLabValues(true);
     reportsLoaded = false;
   } catch (error) {
     setReviewStatus(error?.message || 'A mentés nem sikerült. Ellenőrizd az adatokat.', 'error');
@@ -556,6 +559,90 @@ async function loadLabValues(force = false) {
     labValuesError.hidden = false;
   } finally {
     labValuesLoading = false;
+  }
+}
+
+
+const latestLabValuesList = document.getElementById('latestLabValuesList');
+const latestLabValuesEmpty = document.getElementById('latestLabValuesEmpty');
+const latestLabValuesLoading = document.getElementById('latestLabValuesLoading');
+const latestLabValuesError = document.getElementById('latestLabValuesError');
+let latestLabValuesLoaded = false;
+let latestLabValuesLoadingNow = false;
+
+async function loadLatestLabValues(force = false) {
+  if (latestLabValuesLoadingNow || (latestLabValuesLoaded && !force)) return;
+  if (!window.LABORNAPLO_AUTH?.listLabValues) {
+    latestLabValuesError.hidden = false;
+    latestLabValuesError.textContent = 'A laboreredmények szolgáltatás még nem érhető el.';
+    return;
+  }
+  latestLabValuesLoadingNow = true;
+  latestLabValuesLoading.hidden = false;
+  latestLabValuesEmpty.hidden = true;
+  latestLabValuesError.hidden = true;
+  try {
+    const items = await window.LABORNAPLO_AUTH.listLabValues();
+    latestLabValuesList.replaceChildren();
+    if (!items.length) {
+      latestLabValuesEmpty.hidden = false;
+      latestLabValuesLoaded = true;
+      return;
+    }
+
+    const reportGroups = new Map();
+    for (const item of items) {
+      const key = item.reportId || item.originalFileName || 'latest';
+      const date = item.sampleDate || item.createdAt || '';
+      const current = reportGroups.get(key);
+      if (!current || String(date) > String(current.date)) reportGroups.set(key, { date, items: [] });
+      reportGroups.get(key).items.push(item);
+    }
+    const latest = [...reportGroups.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+    const reportTitle = latest.items[0]?.originalFileName || latest.items[0]?.labName || 'Legutóbbi lelet';
+    const heading = document.createElement('div');
+    heading.className = 'latest-lab-report-heading';
+    const title = document.createElement('strong');
+    title.textContent = reportTitle;
+    const date = document.createElement('span');
+    date.textContent = 'Mintavétel: ' + formatDate(latest.items[0]?.sampleDate);
+    heading.append(title, date);
+    latestLabValuesList.append(heading);
+
+    for (const item of latest.items) {
+      const card = document.createElement('article');
+      card.className = 'card lab-value-card';
+      const main = document.createElement('div');
+      main.className = 'lab-value-main';
+      const name = document.createElement('div');
+      name.className = 'lab-value-name';
+      name.textContent = item.parameterName || 'Laborvizsgálat';
+      const result = document.createElement('strong');
+      result.className = 'lab-value-result';
+      result.textContent = String(item.valueNumeric ?? item.valueText ?? '—') + (item.unit ? ' ' + item.unit : '');
+      main.append(name, result);
+      const meta = document.createElement('div');
+      meta.className = 'lab-value-meta';
+      if (item.referenceRange) {
+        const reference = document.createElement('span');
+        reference.textContent = 'Referencia: ' + item.referenceRange;
+        meta.append(reference);
+      }
+      const flag = document.createElement('span');
+      flag.className = 'lab-value-flag ' + (item.isAbnormal === false ? 'is-normal' : '');
+      flag.textContent = item.isAbnormal === true ? 'Referencia-tartományon kívül' :
+        item.isAbnormal === false ? 'Referencia-tartományon belül' : 'Nincs besorolva';
+      meta.append(flag);
+      card.append(main, meta);
+      latestLabValuesList.append(card);
+    }
+    latestLabValuesLoaded = true;
+  } catch (error) {
+    latestLabValuesError.textContent = error?.message || 'A legutóbbi eredmények betöltése nem sikerült.';
+    latestLabValuesError.hidden = false;
+  } finally {
+    latestLabValuesLoading.hidden = true;
+    latestLabValuesLoadingNow = false;
   }
 }
 
@@ -690,4 +777,5 @@ document.addEventListener('keydown', event => {
 
     window.addEventListener('labor-naplo-authenticated', () => {
       loadProfile(true);
+      loadLatestLabValues(true);
     });
