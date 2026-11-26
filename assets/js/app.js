@@ -386,7 +386,7 @@ function renderReviewItems() {
       createReviewField('Vizsgálat neve', item.rawParameterName || '', 'parameterName'),
       createReviewField('Eredmény', item.parsedNumericValue ?? item.rawValue ?? '', 'value'),
       createReviewField('Mértékegység', item.unit || '', 'unit'),
-      createReviewField('Referencia-tartomány', item.referenceRange || '', 'referenceRange')
+      createReviewField('Referencia-tartomány', normalizeReferenceLimit(item.referenceRange || ''), 'referenceRange')
     );
     const remove = document.createElement('button');
     remove.type = 'button';
@@ -567,7 +567,7 @@ async function loadLabValues(force = false) {
       meta.append(date, lab);
       if (item.referenceRange) {
         const reference = document.createElement('span');
-        reference.textContent = 'Referencia: ' + item.referenceRange;
+        reference.textContent = 'Referencia: ' + normalizeReferenceLimit(item.referenceRange);
         meta.append(reference);
       }
       const flag = document.createElement('span');
