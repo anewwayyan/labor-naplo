@@ -451,12 +451,30 @@ async function startReportExtraction(report, button) {
 }
 
 function parseReferenceRange(value) {
-  const match = String(value || '').match(/(-?\d+(?:[.,]\d+)?)\s*(?:-|–|—|\bto\b)\s*(-?\d+(?:[.,]\d+)?)/i);
-  if (!match) return { low: null, high: null };
+  const text = String(value || '').trim();
+  const limit = text.match(/^([<>≤≥])\s*(-?\d+(?:[.,]\d+)?)$/);
+  if (limit) {
+    const number = Number(limit[2].replace(',', '.'));
+    if (!Number.isFinite(number)) return { low: null, high: null, operator: null };
+    return limit[1] === '<' || limit[1] === '≤'
+      ? { low: null, high: number, operator: limit[1] }
+      : { low: number, high: null, operator: limit[1] };
+  }
+  const match = text.match(/(-?\d+(?:[.,]\d+)?)\s*(?:-|–|—|\bto\b)\s*(-?\d+(?:[.,]\d+)?)/i);
+  if (!match) return { low: null, high: null, operator: null };
   const low = Number(match[1].replace(',', '.'));
   const high = Number(match[2].replace(',', '.'));
   return Number.isFinite(low) && Number.isFinite(high) && low <= high
-    ? { low, high } : { low: null, high: null };
+    ? { low, high, operator: null } : { low: null, high: null, operator: null };
+}
+
+function isOutsideReference(value, range) {
+  if (value === null || range.operator === null && range.low === null && range.high === null) return null;
+  if (range.operator === '<') return value >= range.high;
+  if (range.operator === '≤') return value > range.high;
+  if (range.operator === '>') return value <= range.low;
+  if (range.operator === '≥') return value < range.low;
+  return value < range.low || value > range.high;
 }
 
 approveValuesButton.addEventListener('click', async () => {
@@ -474,15 +492,14 @@ approveValuesButton.addEventListener('click', async () => {
       const numericText = rawValue.replace(',', '.');
       const numeric = /^-?\d+(?:\.\d+)?$/.test(numericText) ? Number(numericText) : null;
       const range = parseReferenceRange(referenceRange);
-      const isAbnormal = numeric !== null && range.low !== null && range.high !== null
-        ? numeric < range.low || numeric > range.high : null;
+      const isAbnormal = isOutsideReference(numeric, range);
       values.push({
         extractedValueId: reviewItems[Number(row.dataset.index)]?.extractedValueId,
         parameterName,
         valueNumeric: numeric,
         valueText: numeric === null ? rawValue : null,
         unit,
-        referenceRange,
+        referenceRange: referenceRange.replace(/\\s*(?:-|–|—|\\bto\\b)\\s*/i, '–'),
         referenceLow: range.low,
         referenceHigh: range.high,
         isAbnormal
