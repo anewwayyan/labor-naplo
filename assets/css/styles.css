@@ -790,3 +790,13 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
       .profile-actions { align-items: stretch; flex-direction: column; }
       .profile-actions .primary-btn { width: 100%; }
     }
+
+
+/* Custom Leletke brand icon */
+.brand-mark {
+  display: block;
+  object-fit: contain;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
