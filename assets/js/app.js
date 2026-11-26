@@ -182,7 +182,7 @@ function renderReports(reports) {
     const actions = document.createElement('div');
     actions.className = 'report-card-actions';
     const status = document.createElement('span');
-    status.className = `report-status ${report.status === 'Approved' ? 'is-approved' : report.status === 'Draft' ? 'is-draft' : ''}`;
+    status.className = `report-status ${report.status === 'Approved' ? 'is-approved' : report.status === 'Draft' ? 'is-draft' : report.status === 'Review' ? 'is-review' : ''}`;
     status.textContent = statusText(report.status);
 
     const deleteButton = document.createElement('button');
