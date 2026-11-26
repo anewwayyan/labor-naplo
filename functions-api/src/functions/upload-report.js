@@ -14,7 +14,7 @@ const {
   DatabaseConfigurationError
 } = require('../lib/database');
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 const PDF_CONTENT_TYPE = 'application/pdf';
 
 class StorageConfigurationError extends Error {
@@ -121,7 +121,7 @@ app.http('uploadReport', {
 
       const declaredLength = Number(request.headers.get('content-length') || 0);
       if (declaredLength > MAX_FILE_SIZE) {
-        return errorResponse(413, 'file_too_large', 'A fájl maximális mérete 20 MB.');
+        return errorResponse(413, 'file_too_large', 'Az ingyenes OCR-hez legfeljebb 4 MB-os PDF tölthető fel.');
       }
 
       const originalFileName = getOriginalFileName(request);
