@@ -111,7 +111,7 @@
             <div class="profile-input-grid">
               <label class="profile-input"><span>Keresztnév</span><input id="profileFirstName" name="firstName" type="text" maxlength="100" autocomplete="given-name" placeholder="Pl. Tamás"></label>
               <label class="profile-input"><span>Hogyan szólíthatunk?</span><input id="profilePreferredName" name="preferredName" type="text" maxlength="100" placeholder="Pl. Tomi"></label>
-              <label class="profile-input"><span>Születési dátum</span><input id="profileDateOfBirth" name="dateOfBirth" type="date" autocomplete="bday"></label>
+              <label class="profile-input"><span>Születési dátum</span><input id="profileDateOfBirth" name="dateOfBirth" type="date" min="1900-01-01" autocomplete="bday"></label>
               <label class="profile-input"><span>Nem</span><select id="profileSex" name="sex"><option value="">Nincs megadva</option><option value="female">Nő</option><option value="male">Férfi</option><option value="other">Egyéb</option><option value="prefer_not_to_say">Nem szeretném megadni</option></select></label>
             </div>
             <label class="profile-toggle" for="profileGreetingEnabled">
