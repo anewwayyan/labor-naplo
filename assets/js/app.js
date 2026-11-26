@@ -450,9 +450,19 @@ async function startReportExtraction(report, button) {
   }
 }
 
-function parseReferenceRange(value) {
+function normalizeReferenceLimit(value) {
   const text = String(value || '').trim();
-  const limit = text.match(/^([<>≤≥])\s*(-?\d+(?:[.,]\d+)?)$/);
+  const limit = text.match(/^(?:([<>≤≥])\\s*(-?\\d+(?:[.,]\\d+)?)|(-?\\d+(?:[.,]\\d+)?)\\s*([<>≤≥]))$/);
+  if (!limit) return text;
+  const inverse = { '<': '>', '>': '<', '≤': '≥', '≥': '≤' };
+  const operator = limit[1] || inverse[limit[4]];
+  const number = limit[2] || limit[3];
+  return operator + number.replace(',', '.');
+}
+
+function parseReferenceRange(value) {
+  const text = normalizeReferenceLimit(value);
+  const limit = text.match(/^([<>≤≥])\\s*(-?\\d+(?:[.,]\\d+)?)$/);
   if (limit) {
     const number = Number(limit[2].replace(',', '.'));
     if (!Number.isFinite(number)) return { low: null, high: null, operator: null };
@@ -460,7 +470,7 @@ function parseReferenceRange(value) {
       ? { low: null, high: number, operator: limit[1] }
       : { low: number, high: null, operator: limit[1] };
   }
-  const match = text.match(/(-?\d+(?:[.,]\d+)?)\s*(?:-|–|—|\bto\b)\s*(-?\d+(?:[.,]\d+)?)/i);
+  const match = text.match(/(-?\\d+(?:[.,]\\d+)?)\\s*(?:-|–|—|\\bto\\b)\\s*(-?\\d+(?:[.,]\\d+)?)/i);
   if (!match) return { low: null, high: null, operator: null };
   const low = Number(match[1].replace(',', '.'));
   const high = Number(match[2].replace(',', '.'));
@@ -499,7 +509,7 @@ approveValuesButton.addEventListener('click', async () => {
         valueNumeric: numeric,
         valueText: numeric === null ? rawValue : null,
         unit,
-        referenceRange: referenceRange.replace(/\\s*(?:-|–|—|\\bto\\b)\\s*/i, '–'),
+        referenceRange: normalizeReferenceLimit(referenceRange).replace(/\\s*(?:-|–|—|\\bto\\b)\\s*/i, '–'),
         referenceLow: range.low,
         referenceHigh: range.high,
         isAbnormal
