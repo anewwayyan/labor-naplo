@@ -2,7 +2,7 @@
 
 const NUMBER_RE = /[<>≤≥]?\s*-?\d{1,8}(?:[.,]\d{1,6})?/;
 const RANGE_RE = /(-?\d{1,8}(?:[.,]\d{1,6})?)\s*(?:-|–|—|\bto\b)\s*(-?\d{1,8}(?:[.,]\d{1,6})?)/i;
-const LIMIT_RE = /([<>≤≥])\s*(-?\d{1,8}(?:[.,]\d{1,6})?)/;
+const LIMIT_RE = /(?:([<>≤≥])\s*(-?\d{1,8}(?:[.,]\d{1,6})?)|(-?\d{1,8}(?:[.,]\d{1,6})?)\s*([<>≤≥]))/;
 
 function toNumber(value) {
   if (typeof value !== 'string') return null;
@@ -33,10 +33,14 @@ function parseLabLine(line, pageNumber) {
   let referenceLimit = null;
   const limitMatch = tail.match(LIMIT_RE);
   if (limitMatch) {
-    const limit = toNumber(limitMatch[2]);
+    const isSuffix = Boolean(limitMatch[4]);
+    const rawOperator = limitMatch[1] || limitMatch[4];
+    const rawLimit = limitMatch[2] || limitMatch[3];
+    const limit = toNumber(rawLimit);
     if (limit !== null) {
-      referenceLimit = limitMatch[1];
-      referenceRange = limitMatch[1] + limitMatch[2].replace(',', '.');
+      const inverseOperator = { '<': '>', '>': '<', '≤': '≥', '≥': '≤' };
+      referenceLimit = isSuffix ? inverseOperator[rawOperator] : rawOperator;
+      referenceRange = referenceLimit + rawLimit.replace(',', '.');
       if (referenceLimit === '<' || referenceLimit === '≤') referenceHigh = limit;
       else referenceLow = limit;
       tail = tail.replace(limitMatch[0], ' ').trim();
