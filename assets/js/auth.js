@@ -488,7 +488,49 @@ console.log('Leletke token fejléc:', {
         throw new Error('Az API nem igazolta a bejelentkezést.');
       }
 
+      // Shared authenticated client for the standalone Functions API.
+      // The user identity is derived only from the access token validated by the API.
+      window.laborNaploApiRequest = async (url, options = {}) => {
+        const freshToken = await msalInstance.acquireTokenSilent({
+          scopes: [AUTH_CONFIG.apiScope],
+          account: currentAccount
+        });
+        const headers = new Headers(options.headers || {});
+        headers.set('X-LaborNaplo-Authorization', `Bearer ${freshToken.accessToken}`);
+        if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+        const apiUrl = new URL(url, AUTH_CONFIG.apiBaseUrl).toString();
+        return fetch(apiUrl, {
+          ...options,
+          headers,
+          cache: 'no-store',
+          credentials: 'omit'
+        });
+      };
+
+      async function listHealthRecords(path) {
+        const response = await window.laborNaploApiRequest(path, { method: 'GET' });
+        let result;
+        try {
+          result = await response.json();
+        } catch {
+          throw new Error('Az API érvénytelen választ adott.');
+        }
+        if (!response.ok) {
+          throw new Error(result?.message || 'Az adatok lekérdezése nem sikerült.');
+        }
+        if (!result || !Array.isArray(result.items)) {
+          throw new Error('Az API válaszának formátuma nem megfelelő.');
+        }
+        return result.items;
+      }
+
+      Object.assign(window.LABORNAPLO_AUTH, {
+        listMedications: () => listHealthRecords('/api/medications'),
+        listAllergies: () => listHealthRecords('/api/allergies')
+      });
+
       showSignedIn(currentAccount);
+      window.dispatchEvent(new CustomEvent('labor-naplo-authenticated'));
       logAuthDiagnostic('authentication-complete');
     }
 
