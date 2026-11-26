@@ -763,3 +763,29 @@ h2 { font-size: 18px; letter-spacing: -.55px; }
   border-color: #7f3744 !important;
   box-shadow: 0 6px 14px rgba(127, 55, 68, .24) !important;
 }
+
+
+/* Profile form styles from the authenticated profile release. */
+.profile-form { margin-bottom: 18px; }
+    .profile-section-head { margin-bottom: 18px; }
+    .profile-section-head .small-muted { margin-top: 4px; }
+    .profile-input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .profile-input { display: grid; gap: 7px; color: #52635c; font-size: 12px; font-weight: 650; }
+    .profile-input input, .profile-input select { width: 100%; min-height: 44px; border: 1px solid #dce7e1; border-radius: 10px; padding: 10px 12px; color: var(--text); background: #fff; outline: none; }
+    .profile-input input:focus, .profile-input select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23,123,104,.1); }
+    .profile-toggle { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 20px; padding: 15px; background: #f7faf8; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+    .profile-toggle strong, .profile-toggle small { display: block; }
+    .profile-toggle strong { font-size: 13px; }
+    .profile-toggle small { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .profile-toggle input { width: 19px; height: 19px; accent-color: var(--primary); flex: 0 0 auto; }
+    .profile-actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 18px; }
+    .profile-status { color: var(--muted); font-size: 12px; margin: 0; }
+    .profile-status[data-state="error"] { color: #a33d4c; }
+    .profile-status[data-state="success"] { color: var(--primary-dark); }
+    .profile-coming { padding: 18px 20px; }
+    .profile-coming .small-muted { margin: 7px 0 0; line-height: 1.6; }
+    @media (max-width: 560px) {
+      .profile-input-grid { grid-template-columns: 1fr; }
+      .profile-actions { align-items: stretch; flex-direction: column; }
+      .profile-actions .primary-btn { width: 100%; }
+    }
