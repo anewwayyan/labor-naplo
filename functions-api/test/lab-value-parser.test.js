@@ -50,3 +50,8 @@ test('recognizes a standalone high flag after the unit', () => {
   assert.equal(item.unit, 'mg/L');
   assert.equal(item.isAbnormal, true);
 });
+
+test('ignores collection date and report metadata lines', () => {
+  assert.equal(parseLabLine('Mintavétel dátuma 2026-11-26', 1), null);
+  assert.equal(parseLabLine('Leletszám 123456', 1), null);
+});
