@@ -5,7 +5,8 @@ const RANGE_RE = /(-?\d{1,8}(?:[.,]\d{1,6})?)\s*(?:-|–|—|\bto\b)\s*(-?\d{1,8
 
 function toNumber(value) {
   if (typeof value !== 'string') return null;
-  const normalized = value.replace(/[<>≤≥\s]/g, '').replace(',', '.');
+  if (/[<>≤≥]/.test(value)) return null;
+  const normalized = value.replace(/\s/g, '').replace(',', '.');
   if (!/^-?\d+(?:\.\d+)?$/.test(normalized)) return null;
   const number = Number(normalized);
   return Number.isFinite(number) ? number : null;
@@ -38,7 +39,7 @@ function parseLabLine(line, pageNumber) {
   }
 
   const unit = tail
-    .replace(/\b(?:H|L|HIGH|LOW|magas|alacsony|emelkedett|csökkent)\b/gi, '')
+    .replace(/(?:^|\s)(?:H|L|HIGH|LOW|magas|alacsony|emelkedett|csökkent)(?=\s|$)/gi, ' ')
     .replace(/[()\[\],;:]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
