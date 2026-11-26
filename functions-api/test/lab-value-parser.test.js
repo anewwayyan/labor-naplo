@@ -79,7 +79,7 @@ test('normalizes a hyphen reference interval to an en dash', () => {
 
 test('normalizes suffix inequality reference limits to prefix form', () => {
   const cases = [
-    ['Koleszterin 4,6 mmol/L 5<', '>5', 5, null, false],
+    ['Koleszterin 4,6 mmol/L 5<', '>5', 5, null, true],
     ['Hemoglobin 145 g/L 120>', '<120', null, 120, false],
     ['Glükóz 5,1 mmol/L 5≤', '≥5', 5, null, false],
     ['Glükóz 4,9 mmol/L 5≥', '≤5', null, 5, false],
