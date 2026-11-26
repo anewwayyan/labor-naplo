@@ -16,6 +16,7 @@ const { extractLabCandidates } = require('../lib/lab-value-parser');
 
 const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const F0_MAX_FILE_SIZE = 4 * 1024 * 1024;
 const MAX_PAGES = '1-2';
 
 class ServiceConfigurationError extends Error {
@@ -147,6 +148,9 @@ app.http('extractReportValues', {
       if (report.contentType !== 'application/pdf' || Number(report.fileSizeBytes) > MAX_FILE_SIZE) {
         return response(415, 'unsupported_document', 'Ez a dokumentum nem dolgozható fel.');
       }
+      if (Number(report.fileSizeBytes) > F0_MAX_FILE_SIZE) {
+        return response(413, 'f0_file_too_large', 'Az ingyenes F0 feldolgozáshoz a PDF legfeljebb 4 MB lehet. Kisebb fájlt tölts fel.');
+      }
 
       const container = getStorageContainer();
       const pdf = await container.getBlockBlobClient(report.blobName).downloadToBuffer();
@@ -201,7 +205,7 @@ app.http('extractReportValues', {
       });
 
       return { status: 200, headers: { 'Cache-Control': 'private, no-store' },
-        jsonBody: { extracted: true, alreadyProcessed: false, pagesProcessed: 2, items: inserted } };
+        jsonBody: { extracted: true, alreadyProcessed: false, pagesProcessed: Math.min(2, analyzeResult.pages?.length || 0), items: inserted } };
     } catch (error) {
       if (error instanceof UnauthorizedError || error?.code === 'UNAUTHORIZED') {
         return { status: 401, headers: { 'Cache-Control': 'private, no-store', 'WWW-Authenticate': 'Bearer' },
