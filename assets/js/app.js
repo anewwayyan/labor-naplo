@@ -343,3 +343,119 @@ document.getElementById('pdfPreviewFullscreen').addEventListener('click', async 
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !pdfPreview.hidden && !document.fullscreenElement) closePdfPreview();
 });
+
+
+// Profile data is fetched from the authenticated API and is never persisted in browser storage.
+    const profileForm = document.getElementById('profileForm');
+    const profileStatus = document.getElementById('profileStatus');
+    const saveProfileButton = document.getElementById('saveProfileButton');
+    const profileDateOfBirth = document.getElementById('profileDateOfBirth');
+
+    // Birth dates must be between 1900-01-01 and today's local date.
+    // Compute max at runtime so the allowed latest date advances automatically.
+    function updateBirthDateLimits() {
+      const now = new Date();
+      const today = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0')
+      ].join('-');
+      profileDateOfBirth.min = '1900-01-01';
+      profileDateOfBirth.max = today;
+    }
+
+    updateBirthDateLimits();
+    const homeGreeting = document.getElementById('homeGreeting');
+    let profileLoaded = false;
+    let profileLoading = false;
+    let profileSaving = false;
+
+    function setProfileStatus(message, state = '') {
+      profileStatus.textContent = message;
+      profileStatus.dataset.state = state;
+    }
+
+    function renderGreeting(profile) {
+      const enabled = profile?.greetingEnabled !== false;
+      const name = (profile?.preferredName || profile?.firstName || '').trim();
+      homeGreeting.textContent = name ? `Szia, ${name}!` : 'Szia!';
+      homeGreeting.hidden = !enabled;
+    }
+
+    function fillProfile(profile) {
+      document.getElementById('profileFirstName').value = profile.firstName || '';
+      document.getElementById('profilePreferredName').value = profile.preferredName || '';
+      document.getElementById('profileDateOfBirth').value = profile.dateOfBirth || '';
+      document.getElementById('profileSex').value = profile.sex || '';
+      document.getElementById('profileGreetingEnabled').checked = profile.greetingEnabled !== false;
+      renderGreeting(profile);
+    }
+
+    async function loadProfile(force = false) {
+      if (profileLoading || (profileLoaded && !force)) return;
+      if (typeof window.laborNaploApiRequest !== 'function') {
+        setProfileStatus('A biztonságos kapcsolat még nem áll készen. Próbáld újra később.', 'error');
+        return;
+      }
+      profileLoading = true;
+      saveProfileButton.disabled = true;
+      setProfileStatus('Profil betöltése…');
+      try {
+        const response = await window.laborNaploApiRequest('/api/profile', { method: 'GET' });
+        const data = await response.json();
+        if (!response.ok || !data.profile) throw new Error(data.message || 'A profil betöltése nem sikerült.');
+        fillProfile(data.profile);
+        profileLoaded = true;
+        setProfileStatus(data.profileExists ? 'A profilod betöltve.' : 'Még nem adtál meg profiladatokat.');
+        saveProfileButton.disabled = false;
+      } catch (error) {
+        setProfileStatus(error.message || 'A profil jelenleg nem érhető el.', 'error');
+        saveProfileButton.disabled = true;
+      } finally {
+        profileLoading = false;
+      }
+    }
+
+    profileForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (profileSaving || !profileLoaded || typeof window.laborNaploApiRequest !== 'function') return;
+      updateBirthDateLimits();
+      if (!profileDateOfBirth.checkValidity()) {
+        profileDateOfBirth.reportValidity();
+        setProfileStatus('A születési dátum 1900. január 1. és a mai nap közé essen.', 'error');
+        return;
+      }
+      const payload = {
+        firstName: document.getElementById('profileFirstName').value,
+        preferredName: document.getElementById('profilePreferredName').value,
+        dateOfBirth: document.getElementById('profileDateOfBirth').value || null,
+        sex: document.getElementById('profileSex').value || null,
+        greetingEnabled: document.getElementById('profileGreetingEnabled').checked
+      };
+      profileSaving = true;
+      saveProfileButton.disabled = true;
+      saveProfileButton.textContent = 'Mentés…';
+      setProfileStatus('Mentés folyamatban…');
+      try {
+        const response = await window.laborNaploApiRequest('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok || data.saved !== true || !data.profile) throw new Error(data.message || 'A mentés nem sikerült.');
+        fillProfile(data.profile);
+        setProfileStatus('A profilod sikeresen mentve.', 'success');
+        showToast('A profil mentése sikerült.');
+      } catch (error) {
+        setProfileStatus(error.message || 'A mentés nem sikerült. Próbáld újra.', 'error');
+      } finally {
+        profileSaving = false;
+        saveProfileButton.disabled = false;
+        saveProfileButton.textContent = 'Mentés';
+      }
+    });
+
+    window.addEventListener('labor-naplo-authenticated', () => {
+      loadProfile(true);
+    });
