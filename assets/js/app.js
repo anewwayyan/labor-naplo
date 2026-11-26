@@ -268,9 +268,9 @@ function handleFile(file) {
     showToast('Csak PDF-fájlt lehet kiválasztani.');
     return;
   }
-  if (file.size > 20 * 1024 * 1024) {
+  if (file.size > 4 * 1024 * 1024) {
     clearSelectedFile();
-    showToast('A fájl túl nagy. A maximális méret 20 MB.');
+    showToast('A fájl túl nagy. Az ingyenes OCR-hez legfeljebb 4 MB-os PDF tölthető fel.');
     return;
   }
   selectedPdfFile = file;
