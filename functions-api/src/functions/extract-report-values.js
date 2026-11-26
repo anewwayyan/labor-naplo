@@ -33,15 +33,15 @@ function getStorageContainer() {
 }
 
 async function analyzeWithDocumentIntelligence(pdfBuffer) {
-  const endpoint = (process.env.DOCUMENT_INTELLIGENCE_ENDPOINT || '').trim().replace(/\\/$/, '');
+  const endpoint = (process.env.DOCUMENT_INTELLIGENCE_ENDPOINT || '').trim().replace(/\/$/, '');
   const key = (process.env.DOCUMENT_INTELLIGENCE_KEY || '').trim();
   if (!endpoint || !key) {
     throw new ServiceConfigurationError('Az Azure AI Document Intelligence F0 erőforrás még nincs összekötve az API-val.');
   }
 
   const base = new URL(endpoint);
-  if (base.protocol !== 'https:' || !/\\.cognitiveservices\\.azure\\.com$/i.test(base.hostname) &&
-      !/\\.services\\.ai\\.azure\\.com$/i.test(base.hostname)) {
+  if (base.protocol !== 'https:' || !/\.cognitiveservices\.azure\.com$/i.test(base.hostname) &&
+      !/\.services\.ai\.azure\.com$/i.test(base.hostname)) {
     throw new ServiceConfigurationError('A Document Intelligence végpontja nem érvényes Azure HTTPS-cím.');
   }
 
