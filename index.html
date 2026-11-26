@@ -82,8 +82,29 @@
         </section>
 
         <section class="page" id="page-results">
-          <div class="header-row"><div><h1>Eredményeim</h1><p class="subheading">A laborértékeid időbeli alakulása egy helyen.</p></div></div>
-          <div class="card content-card empty-large"><div class="upload-icon">⌁</div><h2>Még nincsenek eredményeid</h2><p>Amint feltöltesz és jóváhagysz egy laborleletet, itt jelennek meg a vizsgálati értékeid és az összehasonlítások.</p><button class="primary-btn" data-go="home">＋ Első lelet feltöltése</button></div>
+          <div class="header-row"><div><h1>Eredményeim</h1><p class="subheading">A jóváhagyott laborértékeid egy helyen.</p></div><button type="button" class="secondary-btn" id="refreshLabValues">Frissítés</button></div>
+
+          <section class="card content-card review-panel" id="reviewPanel" hidden>
+            <div class="review-panel-head">
+              <div><h2>Lelet ellenőrzése</h2><p class="small-muted" id="reviewReportName">Nézd át a felismert értékeket, és javítsd, ha szükséges.</p></div>
+              <span class="report-status is-review">Ellenőrzés</span>
+            </div>
+            <p class="review-guidance">A felismerés automatikus, ezért mentés előtt ellenőrizd az értékeket, mértékegységeket és referencia-tartományokat. A rendszer nem értelmezi orvosilag az eredményeket.</p>
+            <div class="review-values" id="reviewValues"></div>
+            <div class="review-actions">
+              <p class="review-status-message" id="reviewStatus" role="status" aria-live="polite"></p>
+              <button type="button" class="primary-btn" id="approveValuesButton">Ellenőrzött értékek mentése</button>
+            </div>
+          </section>
+
+          <div class="section-head"><h2>Mentett eredmények</h2><span class="small-muted" id="labValuesCount">— érték</span></div>
+          <div class="card content-card empty-large" id="labValuesEmpty">
+            <div class="upload-icon">⌁</div><h2>Még nincsenek eredményeid</h2>
+            <p>Feltöltés után indítsd el a lelet feldolgozását, ellenőrizd a felismert adatokat, majd mentsd őket.</p>
+            <button class="primary-btn" data-go="home">＋ Első lelet feltöltése</button>
+          </div>
+          <div class="lab-values-list" id="labValuesList" aria-live="polite"></div>
+          <div class="card content-card reports-message reports-error" id="labValuesError" role="alert" hidden></div>
         </section>
 
         <section class="page" id="page-documents">
