@@ -79,6 +79,11 @@ app.http('getReportExtractedValues', {
               ReferenceHigh AS referenceHigh, IsAbnormal AS isAbnormal
             FROM dbo.ExtractedLabValues
             WHERE ReportId = @reportId AND TenantId = @tenantId AND OwnerUserId = @ownerUserId
+              AND EXISTS (
+                SELECT 1 FROM dbo.LabReports r
+                WHERE r.ReportId = @reportId AND r.TenantId = @tenantId
+                  AND r.OwnerUserId = @ownerUserId AND r.Status <> N'DeletePending'
+              )
             ORDER BY SourcePageNumber, ExtractedValueId;
           `)
       );
