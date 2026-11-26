@@ -349,6 +349,22 @@ document.addEventListener('keydown', event => {
     const profileForm = document.getElementById('profileForm');
     const profileStatus = document.getElementById('profileStatus');
     const saveProfileButton = document.getElementById('saveProfileButton');
+    const profileDateOfBirth = document.getElementById('profileDateOfBirth');
+
+    // Birth dates must be between 1900-01-01 and today's local date.
+    // Compute max at runtime so the allowed latest date advances automatically.
+    function updateBirthDateLimits() {
+      const now = new Date();
+      const today = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0')
+      ].join('-');
+      profileDateOfBirth.min = '1900-01-01';
+      profileDateOfBirth.max = today;
+    }
+
+    updateBirthDateLimits();
     const homeGreeting = document.getElementById('homeGreeting');
     let profileLoaded = false;
     let profileLoading = false;
@@ -403,6 +419,12 @@ document.addEventListener('keydown', event => {
     profileForm.addEventListener('submit', async event => {
       event.preventDefault();
       if (profileSaving || !profileLoaded || typeof window.laborNaploApiRequest !== 'function') return;
+      updateBirthDateLimits();
+      if (!profileDateOfBirth.checkValidity()) {
+        profileDateOfBirth.reportValidity();
+        setProfileStatus('A születési dátum 1900. január 1. és a mai nap közé essen.', 'error');
+        return;
+      }
       const payload = {
         firstName: document.getElementById('profileFirstName').value,
         preferredName: document.getElementById('profilePreferredName').value,
