@@ -164,6 +164,31 @@ app.http('extractReportValues', {
       }
 
       const analyzeResult = await analyzeWithDocumentIntelligence(pdf);
+
+      // Owner-authenticated, opt-in diagnostics. Never log OCR text or expose it by default.
+      if (request.query.get('debug') === '1' && process.env.ENABLE_OCR_DEBUG === 'true') {
+        const pages = Array.isArray(analyzeResult.pages) ? analyzeResult.pages : [];
+        return {
+          status: 200,
+          headers: { 'Cache-Control': 'private, no-store' },
+          jsonBody: {
+            diagnostic: true,
+            pages: pages.map(page => ({
+              pageNumber: page.pageNumber,
+              lines: (Array.isArray(page.lines) ? page.lines : []).map(line => ({
+                content: line.content || '',
+                boundingRegions: line.boundingRegions || []
+              })),
+              words: (Array.isArray(page.words) ? page.words : []).map(word => ({
+                content: word.content || '',
+                confidence: word.confidence ?? null,
+                boundingRegions: word.boundingRegions || []
+              }))
+            }))
+          }
+        };
+      }
+
       const candidates = extractLabCandidates(analyzeResult);
       if (!candidates.length) {
         return response(422, 'no_lab_values_found', 'A leletből nem sikerült biztosan felismerhető laborértéket kinyerni. Ellenőrizd a PDF-et, vagy próbálj jobb minőségű dokumentumot.');

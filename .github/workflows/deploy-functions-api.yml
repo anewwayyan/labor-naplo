@@ -3,7 +3,7 @@ name: Deploy Leletke API
 on:
   push:
     branches:
-      - feature/azure-functions-api
+      - main
     paths:
       - 'functions-api/**'
       - '.github/workflows/deploy-functions-api.yml'
