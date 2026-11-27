@@ -2,6 +2,7 @@
 
 const NUMBER_RE = /[<>≤≥]?\s*-?\d{1,8}(?:[.,]\d{1,6})?/;
 const RANGE_RE = /(-?\d{1,8}(?:[.,]\d{1,6})?)\s*(?:-|–|—|\bto\b)\s*(-?\d{1,8}(?:[.,]\d{1,6})?)/i;
+const LIMIT_RE = /(?:([<>≤≥])\s*(-?\d{1,8}(?:[.,]\d{1,6})?)|(-?\d{1,8}(?:[.,]\d{1,6})?)\s*([<>≤≥]))/;
 
 function toNumber(value) {
   if (typeof value !== 'string') return null;
@@ -16,7 +17,7 @@ function parseLabLine(line, pageNumber) {
   const text = String(line || '').replace(/\s+/g, ' ').trim();
   if (text.length < 5 || text.length > 300) return null;
 
-  const match = text.match(new RegExp('^(.{2,100}?)\\s+(' + NUMBER_RE.source + ')(.*)$', 'u'));
+  const match = text.match(/^(.{2,100}?)\s+([<>≤≥]?\s*-?\d{1,8}(?:[.,]\d{1,6})?)(.*)$/u);
   if (!match) return null;
 
   const rawParameterName = match[1].trim().replace(/[|:;,.\s]+$/, '');
@@ -26,16 +27,33 @@ function parseLabLine(line, pageNumber) {
   if (/^(?:oldal|page|dátum|date|azonosító|taj|születési)/i.test(rawParameterName) ||
       /\b(?:mintavétel|dátum|date|azonosító|taj|születési|laboratórium|leletszám)\b/i.test(rawParameterName)) return null;
 
-  const rangeMatch = tail.match(RANGE_RE);
   let referenceLow = null;
   let referenceHigh = null;
   let referenceRange = null;
-  if (rangeMatch) {
-    referenceLow = toNumber(rangeMatch[1]);
-    referenceHigh = toNumber(rangeMatch[2]);
-    if (referenceLow !== null && referenceHigh !== null && referenceLow <= referenceHigh) {
-      referenceRange = rangeMatch[0].trim();
-      tail = tail.replace(rangeMatch[0], ' ').trim();
+  let referenceLimit = null;
+  const limitMatch = tail.match(LIMIT_RE);
+  if (limitMatch) {
+    const isSuffix = Boolean(limitMatch[4]);
+    const rawOperator = limitMatch[1] || limitMatch[4];
+    const rawLimit = limitMatch[2] || limitMatch[3];
+    const limit = toNumber(rawLimit);
+    if (limit !== null) {
+      const inverseOperator = { '<': '>', '>': '<', '≤': '≥', '≥': '≤' };
+      referenceLimit = isSuffix ? inverseOperator[rawOperator] : rawOperator;
+      referenceRange = referenceLimit + rawLimit.replace(',', '.');
+      if (referenceLimit === '<' || referenceLimit === '≤') referenceHigh = limit;
+      else referenceLow = limit;
+      tail = tail.replace(limitMatch[0], ' ').trim();
+    }
+  } else {
+    const rangeMatch = tail.match(RANGE_RE);
+    if (rangeMatch) {
+      referenceLow = toNumber(rangeMatch[1]);
+      referenceHigh = toNumber(rangeMatch[2]);
+      if (referenceLow !== null && referenceHigh !== null && referenceLow <= referenceHigh) {
+        referenceRange = rangeMatch[0].trim().replace(/\s*(?:-|–|—|\bto\b)\s*/i, '–');
+        tail = tail.replace(rangeMatch[0], ' ').trim();
+      }
     }
   }
 
@@ -48,7 +66,12 @@ function parseLabLine(line, pageNumber) {
 
   const parsedNumericValue = toNumber(rawValue);
   let isAbnormal = null;
-  if (parsedNumericValue !== null && referenceLow !== null && referenceHigh !== null) {
+  if (parsedNumericValue !== null && referenceLimit) {
+    isAbnormal = referenceLimit === '<' ? parsedNumericValue >= referenceHigh
+      : referenceLimit === '≤' ? parsedNumericValue > referenceHigh
+      : referenceLimit === '>' ? parsedNumericValue <= referenceLow
+      : parsedNumericValue < referenceLow;
+  } else if (parsedNumericValue !== null && referenceLow !== null && referenceHigh !== null) {
     isAbnormal = parsedNumericValue < referenceLow || parsedNumericValue > referenceHigh;
   } else if (/(?:^|\s)(?:H|HIGH|magas|emelkedett)(?=\s|$)/i.test(text)) {
     isAbnormal = true;
@@ -81,7 +104,6 @@ function extractLabCandidates(analyzeResult) {
     }
   }
 
-  // De-duplicate identical OCR lines while preserving page order.
   const seen = new Set();
   return candidates.filter(candidate => {
     const key = [
