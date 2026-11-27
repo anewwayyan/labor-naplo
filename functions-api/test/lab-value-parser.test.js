@@ -94,3 +94,57 @@ test('normalizes suffix inequality reference limits to prefix form', () => {
     assert.equal(item.isAbnormal, expectedAbnormal);
   }
 });
+
+
+test('attaches a separate Referencia line to the preceding laboratory result', () => {
+  const items = extractLabCandidates({
+    pages: [{
+      pageNumber: 1,
+      lines: [
+        { content: 'Glükóz 5.1 mmol/L' },
+        { content: 'Referencia: 3.9 -5.6 mmol/L' },
+        { content: 'Koleszterin 4.6 mmol/L' },
+        { content: 'Referencia: < 5.2 mmol/L' },
+        { content: 'CRP 8 mg/L' },
+        { content: 'Referencia: < 5 mg/L' }
+      ]
+    }]
+  });
+  assert.equal(items.length, 3);
+  assert.equal(items[0].rawParameterName, 'Glükóz');
+  assert.equal(items[0].referenceRange, '3.9–5.6');
+  assert.equal(items[0].referenceLow, 3.9);
+  assert.equal(items[0].referenceHigh, 5.6);
+  assert.equal(items[0].isAbnormal, false);
+  assert.equal(items[1].referenceRange, '<5.2');
+  assert.equal(items[1].referenceHigh, 5.2);
+  assert.equal(items[2].referenceRange, '<5');
+  assert.equal(items[2].isAbnormal, true);
+});
+
+test('attaches compound inequality reference ranges without creating a result row', () => {
+  const items = extractLabCandidates({
+    pages: [{
+      pageNumber: 1,
+      lines: [
+        { content: 'TSH 2.1 mIU/L' },
+        { content: 'Referencia: > 0.4 és < 4.0 mIU/L' }
+      ]
+    }]
+  });
+  assert.equal(items.length, 1);
+  assert.equal(items[0].referenceLow, 0.4);
+  assert.equal(items[0].referenceHigh, 4);
+  assert.equal(items[0].isAbnormal, false);
+});
+
+test('does not attach a standalone reference line across page boundaries', () => {
+  const items = extractLabCandidates({
+    pages: [
+      { pageNumber: 1, lines: [{ content: 'Glükóz 5.1 mmol/L' }] },
+      { pageNumber: 2, lines: [{ content: 'Referencia: 3.9-5.6 mmol/L' }] }
+    ]
+  });
+  assert.equal(items.length, 1);
+  assert.equal(items[0].referenceRange, null);
+});
