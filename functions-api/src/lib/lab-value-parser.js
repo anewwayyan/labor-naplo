@@ -92,6 +92,71 @@ function parseLabLine(line, pageNumber) {
   };
 }
 
+function parseStandaloneReference(line) {
+  const text = String(line || '').replace(/\\s+/g, ' ').trim();
+  const match = text.match(/^referencia(?:-tartomány)?\\s*[:：]?\\s*(.+)$/i);
+  if (!match) return null;
+
+  const value = match[1].trim();
+  const compound = value.match(/([<>≤≥])\\s*(-?\\d{1,8}(?:[.,]\\d{1,6})?)\\s*(?:és|and)\\s*([<>≤≥])\\s*(-?\\d{1,8}(?:[.,]\\d{1,6})?)/i);
+  if (compound) {
+    const first = toNumber(compound[2]);
+    const second = toNumber(compound[4]);
+    if (first === null || second === null) return null;
+    const bounds = [
+      { operator: compound[1], value: first },
+      { operator: compound[3], value: second }
+    ];
+    const lower = bounds.find(bound => bound.operator === '>' || bound.operator === '≥');
+    const upper = bounds.find(bound => bound.operator === '<' || bound.operator === '≤');
+    return {
+      referenceRange: value.replace(/\\s+/g, ' '),
+      referenceLow: lower?.value ?? null,
+      referenceHigh: upper?.value ?? null
+    };
+  }
+
+  const limit = value.match(/^([<>≤≥])\\s*(-?\\d{1,8}(?:[.,]\\d{1,6})?)/);
+  if (limit) {
+    const number = toNumber(limit[2]);
+    if (number === null) return null;
+    return {
+      referenceRange: limit[1] + limit[2].replace(',', '.'),
+      referenceLow: limit[1] === '>' || limit[1] === '≥' ? number : null,
+      referenceHigh: limit[1] === '<' || limit[1] === '≤' ? number : null
+    };
+  }
+
+  const range = value.match(RANGE_RE);
+  if (range) {
+    const low = toNumber(range[1]);
+    const high = toNumber(range[2]);
+    if (low === null || high === null || low > high) return null;
+    return {
+      referenceRange: range[0].trim().replace(/\\s*(?:-|–|—|\\bto\\b)\\s*/i, '–'),
+      referenceLow: low,
+      referenceHigh: high
+    };
+  }
+  return null;
+}
+
+function updateAbnormality(candidate) {
+  if (candidate.parsedNumericValue === null) return;
+  if (candidate.referenceLow !== null && candidate.referenceHigh !== null) {
+    candidate.isAbnormal = candidate.parsedNumericValue < candidate.referenceLow ||
+      candidate.parsedNumericValue > candidate.referenceHigh;
+  } else if (candidate.referenceHigh !== null) {
+    candidate.isAbnormal = candidate.referenceRange.startsWith('<')
+      ? candidate.parsedNumericValue >= candidate.referenceHigh
+      : candidate.parsedNumericValue > candidate.referenceHigh;
+  } else if (candidate.referenceLow !== null) {
+    candidate.isAbnormal = candidate.referenceRange.startsWith('>')
+      ? candidate.parsedNumericValue <= candidate.referenceLow
+      : candidate.parsedNumericValue < candidate.referenceLow;
+  }
+}
+
 function extractLabCandidates(analyzeResult) {
   const candidates = [];
   const pages = Array.isArray(analyzeResult?.pages) ? analyzeResult.pages : [];
@@ -99,6 +164,17 @@ function extractLabCandidates(analyzeResult) {
   for (const page of pages) {
     const lines = Array.isArray(page.lines) ? page.lines : [];
     for (const line of lines) {
+      const reference = parseStandaloneReference(line.content);
+      if (reference) {
+        const previous = candidates[candidates.length - 1];
+        if (previous && previous.sourcePageNumber === page.pageNumber) {
+          previous.referenceRange = reference.referenceRange;
+          previous.referenceLow = reference.referenceLow;
+          previous.referenceHigh = reference.referenceHigh;
+          updateAbnormality(previous);
+        }
+        continue;
+      }
       const candidate = parseLabLine(line.content, page.pageNumber);
       if (candidate) candidates.push(candidate);
     }
