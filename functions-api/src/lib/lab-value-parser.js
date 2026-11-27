@@ -93,12 +93,12 @@ function parseLabLine(line, pageNumber) {
 }
 
 function parseStandaloneReference(line) {
-  const text = String(line || '').replace(/\\s+/g, ' ').trim();
-  const match = text.match(/^referencia(?:-tartomány)?\\s*[:：]?\\s*(.+)$/i);
+  const text = String(line || '').replace(/\s+/g, ' ').trim();
+  const match = text.match(/^referencia(?:-tartomány)?\s*[:：]?\s*(.+)$/i);
   if (!match) return null;
 
   const value = match[1].trim();
-  const compound = value.match(/([<>≤≥])\\s*(-?\\d{1,8}(?:[.,]\\d{1,6})?)\\s*(?:és|and)\\s*([<>≤≥])\\s*(-?\\d{1,8}(?:[.,]\\d{1,6})?)/i);
+  const compound = value.match(/([<>≤≥])\s*(-?\d{1,8}(?:[.,]\d{1,6})?)\s*(?:és|and)\s*([<>≤≥])\s*(-?\d{1,8}(?:[.,]\d{1,6})?)/i);
   if (compound) {
     const first = toNumber(compound[2]);
     const second = toNumber(compound[4]);
@@ -109,14 +109,15 @@ function parseStandaloneReference(line) {
     ];
     const lower = bounds.find(bound => bound.operator === '>' || bound.operator === '≥');
     const upper = bounds.find(bound => bound.operator === '<' || bound.operator === '≤');
+    if (!lower || !upper || lower.value > upper.value) return null;
     return {
-      referenceRange: value.replace(/\\s+/g, ' '),
-      referenceLow: lower?.value ?? null,
-      referenceHigh: upper?.value ?? null
+      referenceRange: value.replace(/\s+/g, ' '),
+      referenceLow: lower.value,
+      referenceHigh: upper.value
     };
   }
 
-  const limit = value.match(/^([<>≤≥])\\s*(-?\\d{1,8}(?:[.,]\\d{1,6})?)/);
+  const limit = value.match(/^([<>≤≥])\s*(-?\d{1,8}(?:[.,]\d{1,6})?)/);
   if (limit) {
     const number = toNumber(limit[2]);
     if (number === null) return null;
@@ -133,7 +134,7 @@ function parseStandaloneReference(line) {
     const high = toNumber(range[2]);
     if (low === null || high === null || low > high) return null;
     return {
-      referenceRange: range[0].trim().replace(/\\s*(?:-|–|—|\\bto\\b)\\s*/i, '–'),
+      referenceRange: range[0].trim().replace(/\s*(?:-|–|—|\bto\b)\s*/i, '–'),
       referenceLow: low,
       referenceHigh: high
     };
