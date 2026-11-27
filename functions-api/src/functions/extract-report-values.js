@@ -12,7 +12,7 @@ const {
   withUserDatabaseContext,
   DatabaseConfigurationError
 } = require('../lib/database');
-const { extractLabCandidates } = require('../lib/lab-value-parser');
+const { extractLabCandidates } = require('../lib/lab-value-parser-enhanced');
 
 const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
