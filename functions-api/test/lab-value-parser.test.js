@@ -55,3 +55,42 @@ test('ignores collection date and report metadata lines', () => {
   assert.equal(parseLabLine('Mintavétel dátuma 2026-11-26', 1), null);
   assert.equal(parseLabLine('Leletszám 123456', 1), null);
 });
+
+test('parses exclusive and inclusive inequality reference limits', () => {
+  const below = parseLabLine('Koleszterin 4,6 mmol/L <5', 1);
+  assert.equal(below.referenceRange, '<5');
+  assert.equal(below.referenceHigh, 5);
+  assert.equal(below.isAbnormal, false);
+
+  const above = parseLabLine('Hemoglobin 145 g/L >120', 1);
+  assert.equal(above.referenceRange, '>120');
+  assert.equal(above.referenceLow, 120);
+  assert.equal(above.isAbnormal, false);
+
+  assert.equal(parseLabLine('Koleszterin 5 mmol/L <5', 1).isAbnormal, true);
+  assert.equal(parseLabLine('Hemoglobin 120 g/L >120', 1).isAbnormal, true);
+});
+
+test('normalizes a hyphen reference interval to an en dash', () => {
+  const item = parseLabLine('Glükóz 5,1 mmol/L 4-5', 1);
+  assert.equal(item.referenceRange, '4–5');
+  assert.equal(item.isAbnormal, true);
+});
+
+test('normalizes suffix inequality reference limits to prefix form', () => {
+  const cases = [
+    ['Koleszterin 4,6 mmol/L 5<', '>5', 5, null, true],
+    ['Hemoglobin 145 g/L 120>', '<120', null, 120, true],
+    ['Glükóz 5,1 mmol/L 5≤', '≥5', 5, null, false],
+    ['Glükóz 4,9 mmol/L 5≥', '≤5', null, 5, false],
+    ['Glükóz 5 mmol/L 5<', '>5', 5, null, true],
+    ['Hemoglobin 120 g/L 120>', '<120', null, 120, true]
+  ];
+  for (const [line, expectedRange, expectedLow, expectedHigh, expectedAbnormal] of cases) {
+    const item = parseLabLine(line, 1);
+    assert.equal(item.referenceRange, expectedRange);
+    assert.equal(item.referenceLow, expectedLow);
+    assert.equal(item.referenceHigh, expectedHigh);
+    assert.equal(item.isAbnormal, expectedAbnormal);
+  }
+});
